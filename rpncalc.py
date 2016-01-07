@@ -1,16 +1,5 @@
 import inspect
-import readline
 import copy
-import curses
-import sys
-
-screen = curses.initscr()
-screen.keypad(1)
-YMAX, XMAX = screen.getmaxyx()
-
-stackbox = curses.newwin(YMAX-5,XMAX -1,1,1)
-inputbox = curses.newwin(3,XMAX -1,YMAX-5,1)
-msgbox   = curses.newwin(3,XMAX -1,YMAX-3,1)
 
 def add(interp, a, b):
 	return [Value(a.val + b.val)]
@@ -42,8 +31,34 @@ def comment(interp, a, b):
 	b.comment = a.name
 	interp.variables.pop(a.name)
 	return [b]
-def quit(interp):
-	raise ShutErDownBoys()
+
+def equal(interp, a, b):
+	if a.val == b.val:
+		return [Value(1)]
+	else:
+		return [Value(0)]
+
+def lequal(interp, a, b):
+	if a.val <= b.val:
+		return [Value(1)]
+	else:
+		return [Value(0)]
+def gequal(interp, a, b):
+	if a.val >= b.val:
+		return [Value(1)]
+	else:
+		return [Value(0)]
+def less(interp, a, b):
+	if a.val < b.val:
+		return [Value(1)]
+	else:
+		return [Value(0)]
+def greater(interp, a, b):
+	if a.val > b.val:
+		return [Value(1)]
+	else:
+		return [Value(0)]
+
 
 ops = {'+': add,
        '-': sub,
@@ -58,12 +73,16 @@ ops = {'+': add,
        '?': show_vars,
        'test': test,
        '\'': comment,
-       'quit;': quit}
+       '==': equal,
+       '>': greater,
+       '<': less,
+       '>=': gequal,
+       '<=': lequal}
 
 class NotEnoughOperands(Exception):
 	pass
 
-class ShutErDownBoys(Exception):
+class CantCloseBlock(Exception):
 	pass
 
 class Variable(object):
@@ -89,7 +108,7 @@ class Value(object):
 		return string
 
 class Interpreter(object):
-	def __init__(self, functions=None, stack=None):
+	def __init__(self, functions=None, stack=None, parent=None):
 		if functions is None:
 			functions = []
 		self.functions = functions
@@ -106,6 +125,9 @@ class Interpreter(object):
 		self.backup_vars = None
 
 		self.messages = []
+
+		self.child = None
+		self.parent = parent
 
 	def __str__(self):
 		stackstring = ''
@@ -145,115 +167,80 @@ class Interpreter(object):
 			self.backup_vars = None
 
 	def parse(self, input_string, root = False):
-		if input_string == '':
-			return
-
-		if root:
-			self.backup()
-			self.messages = []
-
-		try:
-			# first split the input up into multiple components if there are any and parse them in order
-			if ' ' in input_string:
-				for subparse in input_string.split(' '):
-					self.parse(subparse)
+		if self.child:
+			self.child.parse(input_string, True)
+		else:
+			if input_string == '':
 				return
-			else:
+			if input_string == '{':
+				self.child = Interpreter(self.functions)
+			if input_string == '}':
+				pass
 
-				# check if the input is just a value.
-				try:
-					val = float(input_string)
-					if val.is_integer():
-						if '.' not in input_string:
-							val = int(val)
-					self.push(Value(val))
+
+			if root:
+				self.backup()
+				self.messages = []
+
+			try:
+				# first split the input up into multiple components if there are any and parse them in order
+				if ' ' in input_string:
+					for subparse in input_string.split(' '):
+						self.parse(subparse)
 					return
-				except:
-				#the input is not just a value so lets see if it is a function
+				else:
+
+					# check if the input is just a value.
 					try:
-						func = self.functions[input_string]
-						argcount = len(inspect.getargspec(func).args) - 1
-						args = [self] + self.pop(argcount)
-						result = func(*args)
-						if result is not None:
-							for val in result:
-								self.push(val)
+						val = float(input_string)
+						if val.is_integer():
+							if '.' not in input_string:
+								val = int(val)
+						self.push(Value(val))
 						return
-					except KeyError:
-						#the input string is not just a function shorthand.
-						#search through the string and see if there are any functions here.
-						for funcname in self.operatorlist:
-							if funcname in input_string:
-								components = input_string.split(funcname)
-								if components[-1] == '':
-									components = components[:-1]
-								for subparse in components:
-									if subparse != '':
-										self.parse(subparse)
-									self.parse(funcname)
-								return
-						if input_string[0] not in '0123456789.':
-							if input_string not in self.variables.keys():
-								self.new_var(input_string)
-							self.push(self.variables[input_string])
-		except NotEnoughOperands:
-			if root:
-				self.message('Not Enough Operands - Stack Unchanged')
-				self.restore()
-				return
-			else:
+					except:
+					#the input is not just a value so lets see if it is a function
+						try:
+							func = self.functions[input_string]
+							argcount = len(inspect.getargspec(func).args) - 1
+							args = [self] + self.pop(argcount)
+							result = func(*args)
+							if result is not None:
+								for val in result:
+									self.push(val)
+							return
+						except KeyError:
+							#the input string is not just a function shorthand.
+							#search through the string and see if there are any functions here.
+							for funcname in self.operatorlist:
+								if funcname in input_string:
+									components = input_string.split(funcname)
+									if components[-1] == '':
+										components = components[:-1]
+									for subparse in components:
+										if subparse != '':
+											self.parse(subparse)
+										self.parse(funcname)
+									return
+							if input_string[0] not in '0123456789.':
+								if input_string not in self.variables.keys():
+									self.new_var(input_string)
+								self.push(self.variables[input_string])
+			except NotEnoughOperands:
+				if root:
+					self.message('Not Enough Operands - Stack Unchanged')
+					self.restore()
+					return
+				else:
+					raise
+			except:
+				if root:
+					self.message('Unknown Error - Stack Unchanged')
+					self.restore()
 				raise
-		except:
-			if root:
-				self.message('Unknown Error - Stack Unchanged')
-				self.restore()
-			raise
 
 	def new_var(self, name):
 		var = Variable(name)
 		self.variables[name] = var
 	
 
-i = Interpreter(ops)
-
-def show_stack(scr):
-	pass
-
-try:
-	while True:
-		inputbox.clear()
-		inputbox.box()
-
-		stackbox.erase()
-		stackbox.box()
-
-		msgbox.clear()
-		msgbox.box()
-
-		max_stack = min(len(i.stack), YMAX-5)
-		if max_stack >= 0:
-			for row in xrange(1,max_stack + 1):
-				stackbox.addstr(YMAX- 6 - row, 2, str(i.stack[-row]))
-		if i.messages:
-			msgbox.addstr(1, 2, i.messages[0])
-
-		screen.clear()
-		inputbox.overlay(screen)
-		stackbox.overlay(screen)
-		msgbox.overlay(screen)
-		screen.refresh()
-		text_input = inputbox.getstr(1,1,38)
-		i.parse(text_input, True)
-
-except ShutErDownBoys:
-	pass
-except KeyboardInterrupt:
-	pass
-except:
-	curses.endwin()
-	raise
-
-curses.endwin()
-if len(i.stack) > 0:
-	print i.stack[-1]
-sys.exit(0)

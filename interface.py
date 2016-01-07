@@ -40,10 +40,13 @@ try:
 		msgbox.clear()
 		msgbox.box()
 
-		max_stack = min(len(interp.stack), YMAX-5)
+		stack = interp.stack[:]
+		if interp.function_stack is not None:
+			stack += ['#'] + interp.function_stack 
+		max_stack = min(len(stack), YMAX-5)
 		if max_stack >= 0:
 			for row in xrange(1,max_stack + 1):
-				stackbox.addstr(YMAX- 6 - row, 2, str(interp.stack[-row]))
+				stackbox.addstr(YMAX- 6 - row, 2, str(stack[-row]))
 		if interp.messages:
 			msgbox.addstr(1, 2, interp.messages[0])
 
@@ -59,7 +62,7 @@ try:
 		else:
 			interp.parse(text_input, True)
 
-except rpncalc.ShutErDownBoys:
+except ShutErDownBoys:
 	pass
 except KeyboardInterrupt:
 	pass

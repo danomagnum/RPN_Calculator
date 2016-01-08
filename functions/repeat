@@ -1,0 +1,14 @@
+[
+ q = `
+ val = 
+ val
+ q
+ 1 -
+ q =
+ 0 <
+ {
+  q
+  repeat !
+ }
+ ]
+repeat =

@@ -1,14 +1,16 @@
 import inspect
 import copy
 
-def add(interp, a, b):
+log = []
+
+def add(interp, b, a):
 	return [Value(a.val + b.val)]
-def sub(interp, a, b):
+def sub(interp, b, a):
 	return [Value(a.val - b.val)]
-def mult(interp, a, b):
+def mult(interp, b, a):
 	return [Value(a.val * b.val)]
-def div(interp, a, b):
-	return [Value(b.val / a.val)]
+def div(interp, b, a):
+	return [Value(a.val / b.val)]
 def convert_int(interp, a):
 	return [Value(int(a.val))]
 def convert_float(interp, a):
@@ -22,8 +24,7 @@ def assign(interp, var, val):
 	if result is not None:
 		return [result]
 	else:
-		interp.message('cannot assign')
-		raise CantAssign()
+		raise CantAssign('Cannot Do Assignment')
 		
 def remove(interp, a):
 	return None
@@ -33,9 +34,13 @@ def show_vars(interp):
 def test(interp):
 	pass
 def comment(interp, a, b):
-	b.comment = a.name
-	interp.variables.pop(a.name)
-	return [b]
+	if hasattr(a, 'name'):
+		b.comment = a.name
+		interp.variables.pop(a.name)
+		return [b]
+	else:
+		raise CantAssign('Cannot create comment')
+
 
 def equal(interp, a, b):
 	if a.val == b.val:
@@ -68,7 +73,7 @@ def call(interp, a):
 	if type(a) is Function:
 		interp.call(a)
 	else:
-		raise CantExecute()
+		raise CantExecute('Cannot Execute a Non-Function')
 
 
 ops = {'+': add,
@@ -110,14 +115,25 @@ class Function(object):
 		self.comment = comment
 	
 	def reassign(self, interp, val):
-		pass
+		if type(val) == Variable:
+			var = Variable(self.name, val.val)
+			interp.variables[self.name] = var
+			return var
+		elif type(val) == Value:
+			var = Variable(self.name, val.val)
+			interp.variables[self.name] = var
+			return var
+		elif type(val) == Function:
+			self.stack = val.stack
+			interp.variables[self.name] = self
+			return self
 	def __str__(self):
 		
 		if self.name is None:
 			name = 'lambda'
 		else:
 			name = self.name
-		return '#' + name + '#'
+		return '[' + name + ']'
 
 class Variable(object):
 	def __init__(self, name, val=0, comment='') :
@@ -160,9 +176,6 @@ class Interpreter(object):
 			builtin_functions = []
 
 		self.builtin_functions = builtin_functions
-		self.builtin_functions['{'] = self.conditional_start
-		self.builtin_functions['}'] = self.conditional_end
-		self.builtin_functions['#'] = self.function_def
 
 		if stack is None:
 			stack = []
@@ -181,6 +194,7 @@ class Interpreter(object):
 		self.ignore_conds = 0
 
 		self.function_stack = None
+		self.function_depth = 0
 
 		self.parent = parent
 
@@ -203,6 +217,7 @@ class Interpreter(object):
 		self.ignore_conds -= 1
 		if self.ignore_conds < 0:
 			self.ignore_conds = 0
+		self.message('Conditon nest level ' + str(self.ignore_conds))
 
 	def __str__(self):
 		stackstring = ''
@@ -219,13 +234,15 @@ class Interpreter(object):
 		if count > len(self.stack):
 			if self.parent is not None:
 				if count > (len(self.stack) + len(self.parent.stack)):
-					raise NotEnoughOperands
+					raise NotEnoughOperands('Not Enough Operands (Parent checked)')
 				else:
-					for x in xrange(len(self.stack)):
+					mine = len(self.stack)
+					parents = count - mine
+					for x in xrange(mine):
 						vals.append(self.stack.pop())
-					vals += self.parent.pop(count - len(self.stack) - 1)
+					vals += self.parent.pop(parents)
 			else:
-				raise NotEnoughOperands
+				raise NotEnoughOperands('Not Enough Operands (No Parent)')
 		else:
 			for x in xrange(count):
 				vals.append(self.stack.pop())
@@ -252,15 +269,25 @@ class Interpreter(object):
 			self.backup_vars = None
 
 
-	def function_def(self):
+	def function_start(self):
 		if self.function_stack is None:
 			#start recording function
 			self.function_stack = []
 		else:
+			self.function_stack.append('[')
+
+		self.function_depth += 1
+
+	def function_end(self):
+		self.function_depth -= 1
+		
+		if self.function_depth == 0:
 			#finish recording function
 			f = Function(stack = self.function_stack)
 			self.function_stack = None
 			self.push(f)
+		else:
+			self.function_stack.append(']')
 
 	def call(self, function):
 		i = Interpreter(self.builtin_functions,parent=self)
@@ -296,14 +323,22 @@ class Interpreter(object):
 				return
 			else:
 				# handle the flow control items
-				for symbol in ('{', '}', '#'):
+				for symbol in ('{', '}', '[', ']'):
 					if symbol in input_string:
-						if symbol == '#':
-							self.function_def()
+						if symbol == '[':
+							self.function_start()
+						elif symbol == ']':
+							self.function_end()
 						elif symbol == '{':
-							self.conditional_start()
+							if self.function_stack is not None:
+								self.function_stack.append(input_string)
+							else:
+								self.conditional_start()
 						elif symbol == '}':
-							self.conditional_end()
+							if self.function_stack is not None:
+								self.function_stack.append(input_string)
+							else:
+								self.conditional_end()
 						else:
 							components = input_string.split(symbol)
 							if components[-1] == '':
@@ -316,6 +351,9 @@ class Interpreter(object):
 
 				if self.function_stack is not None:
 					self.function_stack.append(input_string)
+					return
+				
+				if self.ignore_conds:
 					return
 
 
@@ -332,14 +370,13 @@ class Interpreter(object):
 				except:
 				#the input is not just a value so lets see if it is a function
 					if input_string in self.operatorlist:
-						if not self.ignore_conds:
-							func = self.builtin_functions[input_string]
-							argcount = len(inspect.getargspec(func).args) - 1
-							args = [self] + self.pop(argcount)
-							result = func(*args)
-							if result is not None:
-								for val in result:
-									self.push(val)
+						func = self.builtin_functions[input_string]
+						argcount = len(inspect.getargspec(func).args) - 1
+						args = [self] + self.pop(argcount)
+						result = func(*args)
+						if result is not None:
+							for val in result:
+								self.push(val)
 						return
 
 
@@ -361,30 +398,38 @@ class Interpreter(object):
 						if input_string[0] not in '0123456789.':
 							self.push(self.get_var(input_string))
 
-		except NotEnoughOperands:
+		except (NotEnoughOperands, CantAssign, CantCloseBlock, CantExecute) as e:
 			if root:
-				self.message('Not Enough Operands - Stack Unchanged')
+				self.message((e.message) + ' - Stack Unchanged')
 				self.restore()
 				return
 			else:
 				raise
-		except:
+		except Exception as e:
 			if root:
-				self.message('Unknown Error - Stack Unchanged')
+				self.message(str(e.message) + ' - Stack Unchanged')
 				self.restore()
+				return
 			raise
+
 
 	def new_var(self, name):
 		var = Variable(name)
 		self.variables[name] = var
 		return var
 	
-	def get_var(self, name):
+	def get_var(self, name, create = True):
 		if name not in self.variables.keys():
 			if self.parent is not None:
-				if name in self.parent.variables.keys():
-					return self.parent.get_var(name)
-			return self.new_var(name)
+				var = self.parent.get_var(name, False)
+				if var is not None:
+					return var
+				#if name in self.parent.variables.keys():
+					#return self.parent.get_var(name)
+			if create:
+				return self.new_var(name)
+			else:
+				return None
 		else:
 			return self.variables[name]
 

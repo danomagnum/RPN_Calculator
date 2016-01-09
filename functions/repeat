@@ -6,9 +6,10 @@
  1 -
  q =
  0 <
- {
+ [
   q
   repeat !
- }
+ ]
+ if
  ]
 repeat =

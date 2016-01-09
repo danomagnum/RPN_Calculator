@@ -155,6 +155,5 @@ if len(interp.stack) > 0:
 for x in rpncalc.log:
 	print x
 
-print interp.variables['fib'].stack
 
 sys.exit(0)

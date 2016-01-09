@@ -7,13 +7,14 @@
  a int
  b int
  c int 
+ [
+  q
+  fib !
+  ]
  q
  1 -
  q =
  0 <
- {
-  q
-  fib !
-  }
+ if
  ]
  fib =

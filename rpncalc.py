@@ -75,6 +75,49 @@ def call(interp, a):
 	else:
 		raise CantExecute('Cannot Execute a Non-Function')
 
+def condition_if(interp, a, b):
+	if a.val == 1:
+		if type(b) is Function:
+			interp.call(b)
+		else:
+			return [ b ] 
+
+def condition_ifelse(interp, a, b, c):
+	if a.val == 1:
+		if type(b) is Function:
+			interp.call(b)
+		else:
+			return [ b ]
+	else:
+		if type(c) is Function:
+			interp.call(c)
+		else:
+			return [ c ]
+
+def duplicate(interp, a):
+	return [a, a]
+
+def rotate(interp, a, b, c):
+	return [ b, a, c ]
+
+def over (interp, a, b):
+	return [b, a, b]
+
+def tuck (interp, a, b):
+	return [a, b, a]
+
+def pick(interp, number):
+	items = interp.pop(number.val + 1)
+	items.reverse()
+	return items + [items[0]]
+
+def roll(interp, number):
+	items = interp.pop(number.val + 1)
+	items.reverse()
+	return items[1:] + [items[0]]
+
+
+
 
 ops = {'+': add,
        '-': sub,
@@ -84,8 +127,15 @@ ops = {'+': add,
        'int': convert_int,
        'float': convert_float,
        'swap': swap,
+       'dup': duplicate,
+       'rot': rotate,
+       'over': over,
+       'tuck': tuck,
+       'pick': pick,
+       'roll': roll,
        '=': assign,
        '`': remove,
+       'drop': remove,
        '?': show_vars,
        'test': test,
        '\'': comment,
@@ -94,7 +144,9 @@ ops = {'+': add,
        '<': less,
        '>=': gequal,
        '<=': lequal,
-       '!': call}
+       '!': call,
+       'if': condition_if,
+       'ifelse': condition_ifelse}
 
 class NotEnoughOperands(Exception):
 	pass
@@ -191,33 +243,13 @@ class Interpreter(object):
 
 		self.messages = []
 
-		self.ignore_conds = 0
-
 		self.function_stack = None
 		self.function_depth = 0
 
 		self.parent = parent
 
-	def conditional_start(self):
-		if self.ignore_conds == 0:
-			if self.pop()[0].val != 1:
-				self.ignore_conds += 1
-				self.message('Conditon False (nest level ' + str(self.ignore_conds) + ')')
-			else:
-				self.message('Conditon True')
-		else:
-			self.ignore_conds += 1
-			self.message('Condition Not Evaluated (nest level ' + str(self.ignore_conds) + ')')
-	
-
 	def child_done(self, child):
 		self.stack += child.stack
-
-	def conditional_end(self):
-		self.ignore_conds -= 1
-		if self.ignore_conds < 0:
-			self.ignore_conds = 0
-		self.message('Conditon nest level ' + str(self.ignore_conds))
 
 	def __str__(self):
 		stackstring = ''
@@ -233,7 +265,7 @@ class Interpreter(object):
 
 		if count > len(self.stack):
 			if self.parent is not None:
-				if count > (len(self.stack) + len(self.parent.stack)):
+				if count > self.stacksize():
 					raise NotEnoughOperands('Not Enough Operands (Parent checked)')
 				else:
 					mine = len(self.stack)
@@ -247,6 +279,13 @@ class Interpreter(object):
 			for x in xrange(count):
 				vals.append(self.stack.pop())
 		return vals
+	
+	def stacksize(self, me_only = False):
+		count = len(self.stack)
+		if not me_only:
+			if self.parent is not None:
+				count += self.parent.stacksize()
+		return count
 
 	def backup(self):
 		self.backup_stack = copy.deepcopy(self.stack)
@@ -323,22 +362,12 @@ class Interpreter(object):
 				return
 			else:
 				# handle the flow control items
-				for symbol in ('{', '}', '[', ']'):
+				for symbol in ('[', ']'):
 					if symbol in input_string:
 						if symbol == '[':
 							self.function_start()
 						elif symbol == ']':
 							self.function_end()
-						elif symbol == '{':
-							if self.function_stack is not None:
-								self.function_stack.append(input_string)
-							else:
-								self.conditional_start()
-						elif symbol == '}':
-							if self.function_stack is not None:
-								self.function_stack.append(input_string)
-							else:
-								self.conditional_end()
 						else:
 							components = input_string.split(symbol)
 							if components[-1] == '':
@@ -353,9 +382,6 @@ class Interpreter(object):
 					self.function_stack.append(input_string)
 					return
 				
-				if self.ignore_conds:
-					return
-
 
 				# check if the input is just a value.
 				try:
@@ -364,8 +390,7 @@ class Interpreter(object):
 						if '.' not in input_string:
 							val = int(val)
 
-					if not self.ignore_conds:
-						self.push(Value(val))
+					self.push(Value(val))
 					return
 				except:
 				#the input is not just a value so lets see if it is a function
@@ -409,6 +434,7 @@ class Interpreter(object):
 			if root:
 				self.message(str(e.message) + ' - Stack Unchanged')
 				self.restore()
+				raise
 				return
 			raise
 

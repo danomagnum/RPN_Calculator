@@ -67,10 +67,17 @@ def parse(input_string):
 			raise ShutErDownBoys()
 		elif text[0] == '!':
 			try:
-				res = eval(' '.join(text[1:]))
+				command = ''
+				for character in input_string[1:]:
+					if character == '?':
+						command += str(interp.pop()[0].val)
+					else:
+						command += character
+						
+				res = eval(command)
 				interp.parse(str(res))
 			except Exception as e:
-				raise BadPythonCommand('Bad Python Command ' + e.message)
+				raise BadPythonCommand('Bad Python Command (' + command + ') ' + e.message)
 
 	else:
 		interp.parse(input_string, True)
@@ -126,7 +133,8 @@ while loop:
 			event = curses.KEY_DC
 
 		if event <= 255:
-			input_string_pre += chr(event)
+			if event > 0:
+				input_string_pre += chr(event)
 		else:
 			if event == curses.KEY_BACKSPACE:
 				if len(input_string_pre) > 0:
@@ -173,7 +181,12 @@ while loop:
 	except ShutErDownBoys:
 		loop = False
 	except KeyboardInterrupt:
-		loop = False
+		input_string = input_string_pre + input_string_post
+		if input_string:
+			input_string_post = ''
+			input_string_pre = ''
+		else:
+			loop = False
 	except BadPythonCommand as e:
 		interp.message(e.message)
 	except:

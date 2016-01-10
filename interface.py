@@ -3,6 +3,7 @@ import readline
 import curses
 import sys
 import os
+import math
 
 screen = curses.initscr()
 screen.keypad(1)
@@ -20,6 +21,9 @@ interp = rpncalc.Interpreter(rpncalc.ops)
 
 
 class ShutErDownBoys(Exception):
+	pass
+
+class BadPythonCommand(Exception):
 	pass
 
 
@@ -61,6 +65,12 @@ def parse(input_string):
 			f.close()
 		elif text[0] == 'quit':
 			raise ShutErDownBoys()
+		elif text[0] == '!':
+			try:
+				res = eval(' '.join(text[1:]))
+				interp.parse(str(res))
+			except Exception as e:
+				raise BadPythonCommand('Bad Python Command ' + e.message)
 
 	else:
 		interp.parse(input_string, True)
@@ -69,8 +79,9 @@ numbox.box()
 for y in xrange(1, YMAX - 5):
 	numbox.addstr(numbox.getmaxyx()[0] - y - 1, 1, str(y - 1))
 
-try:
-	while True:
+loop = True
+while loop:
+	try:
 		screen.clear()
 		inputbox.clear()
 		inputbox.box()
@@ -159,17 +170,17 @@ try:
 		#msgbox.overlay(screen)
 		#screen.refresh()
 
-
-
-except ShutErDownBoys:
-	pass
-except KeyboardInterrupt:
-	pass
-except:
-	curses.endwin()
-	for x in rpncalc.log:
-		print x
-	raise
+	except ShutErDownBoys:
+		loop = False
+	except KeyboardInterrupt:
+		loop = False
+	except BadPythonCommand as e:
+		interp.message(e.message)
+	except:
+		curses.endwin()
+		for x in rpncalc.log:
+			print x
+		raise
 
 curses.endwin()
 for v in interp.stack:

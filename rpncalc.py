@@ -4,23 +4,33 @@ import copy
 log = []
 
 def add(interp, b, a):
-	comment = a.comment + '+' + b.comment
+	comment = ''
+	if a.comment and b.comment:
+		comment = a.comment + '+' + b.comment
 	return [Value(a.val + b.val, comment)]
 def sub(interp, b, a):
-	comment = a.comment + '-' + b.comment
+	comment = ''
+	if a.comment and b.comment:
+		comment = a.comment + '+' + b.comment
 	return [Value(a.val - b.val, comment)]
 def mult(interp, b, a):
-	comment = a.comment + '*' + b.comment
+	comment = ''
+	if a.comment and b.comment:
+		comment = a.comment + '+' + b.comment
 	return [Value(a.val * b.val, comment)]
 def div(interp, b, a):
-	comment = a.comment + '/' + b.comment
+	comment = ''
+	if a.comment and b.comment:
+		comment = a.comment + '+' + b.comment
 	return [Value(a.val / b.val, comment)]
 def convert_int(interp, a):
 	return [Value(int(a.val))]
 def convert_float(interp, a):
 	return [Value(float(a))]
 def modulus(interp, a,b):
-	comment = a.comment + '%' + b.comment
+	comment = ''
+	if a.comment and b.comment:
+		comment = a.comment + '+' + b.comment
 	return [Value(a.val % b.val, comment)]
 def swap(interp, a,b):
 	return (a, b)
@@ -121,6 +131,11 @@ def roll(interp, number):
 	items.reverse()
 	return items[1:] + [items[0]]
 
+def exponent(interp, b, a):
+	comment = ''
+	if a.comment and b.comment:
+		comment = a.comment + '+' + b.comment
+	return [Value(a.val ** b.val, comment)]
 
 
 
@@ -151,7 +166,8 @@ ops = {'+': add,
        '<=': lequal,
        '!': call,
        'if': condition_if,
-       'ifelse': condition_ifelse}
+       'ifelse': condition_ifelse,
+       '^': exponent}
 
 class NotEnoughOperands(Exception):
 	pass

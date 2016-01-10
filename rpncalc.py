@@ -4,19 +4,24 @@ import copy
 log = []
 
 def add(interp, b, a):
-	return [Value(a.val + b.val)]
+	comment = a.comment + '+' + b.comment
+	return [Value(a.val + b.val, comment)]
 def sub(interp, b, a):
-	return [Value(a.val - b.val)]
+	comment = a.comment + '-' + b.comment
+	return [Value(a.val - b.val, comment)]
 def mult(interp, b, a):
-	return [Value(a.val * b.val)]
+	comment = a.comment + '*' + b.comment
+	return [Value(a.val * b.val, comment)]
 def div(interp, b, a):
-	return [Value(a.val / b.val)]
+	comment = a.comment + '/' + b.comment
+	return [Value(a.val / b.val, comment)]
 def convert_int(interp, a):
 	return [Value(int(a.val))]
 def convert_float(interp, a):
 	return [Value(float(a))]
 def modulus(interp, a,b):
-	return [Value(a.val % b.val)]
+	comment = a.comment + '%' + b.comment
+	return [Value(a.val % b.val, comment)]
 def swap(interp, a,b):
 	return (a, b)
 def assign(interp, var, val):
@@ -75,14 +80,14 @@ def call(interp, a):
 	else:
 		raise CantExecute('Cannot Execute a Non-Function')
 
-def condition_if(interp, a, b):
+def condition_if(interp, b, a):
 	if a.val == 1:
 		if type(b) is Function:
 			interp.call(b)
 		else:
 			return [ b ] 
 
-def condition_ifelse(interp, a, b, c):
+def condition_ifelse(interp, c, b, a):
 	if a.val == 1:
 		if type(b) is Function:
 			interp.call(b)

@@ -2,14 +2,17 @@ import rpncalc
 import readline
 import curses
 import sys
+import os
 
 screen = curses.initscr()
 screen.keypad(1)
 YMAX, XMAX = screen.getmaxyx()
+curses.noecho()
 
-stackbox = curses.newwin(YMAX-5,XMAX -1,1,1)
-inputbox = curses.newwin(3,XMAX -1,YMAX-5,1)
-msgbox   = curses.newwin(3,XMAX -1,YMAX-3,1)
+stackbox = curses.newwin(YMAX-4,XMAX -1,0,0)
+inputbox = curses.newwin(3,XMAX -1,YMAX-5,0)
+msgbox   = curses.newwin(3,XMAX -1,YMAX-3,0)
+numbox = curses.newwin(YMAX-4, 4, 0, 0)
 inputbox.keypad(1)
 
 
@@ -33,12 +36,42 @@ stackbox.overlay(screen)
 msgbox.overlay(screen)
 screen.refresh()
 
+def editor_validator(keystroke):
+	#raise Exception('ERRORRRRR: ' + str(keystroke))
+	message = str(keystroke)
+	tbox.do_command(keystroke)
 
+def parse(input_string):
+	if input_string[0] == ':': # interface commands start with a colon
+		input_string = input_string[1:]
+		text = input_string.split()
+		if text[0] == 'import':
+			f = open(os.path.join('functions', text[1]))
+			commands = f.read()
+			f.close()
+			for command in commands.split():
+			#commands = ' '.join(commands.split())
+				parse(command)
+		elif text[0] == 'export':
+			f = open(os.path.join('functions', text[1]), 'w+')
+			commands = interp.stack[-1].stack
+			for cmd in commands:
+				f.write(cmd)
+				f.write('\n')
+			f.close()
+		elif text[0] == 'quit':
+			raise ShutErDownBoys()
 
+	else:
+		interp.parse(input_string, True)
 
+numbox.box()
+for y in xrange(1, YMAX - 5):
+	numbox.addstr(numbox.getmaxyx()[0] - y - 1, 1, str(y - 1))
 
 try:
 	while True:
+		screen.clear()
 		inputbox.clear()
 		inputbox.box()
 
@@ -47,23 +80,26 @@ try:
 
 		msgbox.clear()
 		msgbox.box()
+
 		inputbox.addstr(1, 2, input_string_pre)
 		inputbox.addstr(1, 2 + len(input_string_pre), input_string_post)
 
 		stack = interp.stack[:]
+
 		if interp.function_stack is not None:
 			stack += ['['] + interp.function_stack 
 		max_stack = min(len(stack), YMAX-5)
 		if max_stack >= 0:
 			for row in xrange(1,max_stack + 1):
-				stackbox.addstr(YMAX- 6 - row, 2, str(stack[-row]))
+				stackbox.addstr(YMAX- 5 - row, 5, str(stack[-row]))
 		if interp.messages:
-			msgbox.addstr(1, 2, '| '.join(interp.messages))
+			msgbox.addstr(1, 5, '| '.join(interp.messages))
 
 		screen.clear()
 		inputbox.overlay(screen)
 		stackbox.overlay(screen)
 		msgbox.overlay(screen)
+		numbox.overlay(screen)
 		screen.refresh()
 
 
@@ -116,25 +152,12 @@ try:
 					input_string_post = ''
 					input_string_pre = ''
 
-					if input_string[0] == ':': # interface commands start with a colon
-						input_string = input_string[1:]
-						text = input_string.split()
-						if text[0] == 'import':
-							f = open('functions/' + text[1])
-							commands = f.read()
-							f.close()
-							commands = ' '.join(commands.split())
-							rpncalc.log.append(commands)
-							interp.parse(commands)
+					parse(input_string)
 
-					else:
-						interp.parse(input_string, True)
-
-
-		inputbox.overlay(screen)
-		stackbox.overlay(screen)
-		msgbox.overlay(screen)
-		screen.refresh()
+		#inputbox.overlay(screen)
+		#stackbox.overlay(screen)
+		#msgbox.overlay(screen)
+		#screen.refresh()
 
 
 
@@ -149,8 +172,8 @@ except:
 	raise
 
 curses.endwin()
-if len(interp.stack) > 0:
-	print interp.stack[-1]
+for v in interp.stack:
+	print v
 
 for x in rpncalc.log:
 	print x

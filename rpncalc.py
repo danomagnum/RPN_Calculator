@@ -137,6 +137,8 @@ def exponent(interp, b, a):
 		comment = a.comment + '+' + b.comment
 	return [Value(a.val ** b.val, comment)]
 
+def size(interp):
+	return [Value(interp.stacksize())]
 
 
 ops = {'+': add,
@@ -167,7 +169,8 @@ ops = {'+': add,
        '!': call,
        'if': condition_if,
        'ifelse': condition_ifelse,
-       '^': exponent}
+       '^': exponent,
+       'size': size}
 
 class NotEnoughOperands(Exception):
 	pass

@@ -192,15 +192,15 @@ while loop:
 	except:
 		curses.endwin()
 		for x in rpncalc.log:
-			print x
+			print(x)
 		raise
 
 curses.endwin()
 for v in interp.stack:
-	print v
+	print(v)
 
 for x in rpncalc.log:
-	print x
+	print(x)
 
 
 sys.exit(0)

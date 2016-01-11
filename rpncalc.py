@@ -269,9 +269,6 @@ class Interpreter(object):
 
 		self.parent = parent
 
-	def child_done(self, child):
-		self.stack += child.stack
-
 	def __str__(self):
 		stackstring = ''
 		for x in self.stack:
@@ -311,6 +308,7 @@ class Interpreter(object):
 	def backup(self):
 		self.backup_stack = copy.deepcopy(self.stack)
 		self.backup_vars = copy.deepcopy(self.variables)
+
 	def backedup(self):
 		if self.backup_stack is None:
 			return False
@@ -370,12 +368,17 @@ class Interpreter(object):
 		if input_string == '':
 			return
 
+
 		if root:
 			self.backup()
 			self.messages = []
 
 		try:
 			# first split the input up into multiple components if there are any and parse them in order
+
+			if '#' in input_string:
+				self.parse( input_string.split('#')[0])
+				return
 
 			if ' ' in input_string:
 				for subparse in input_string.split(' '):

@@ -83,7 +83,7 @@ def parse(input_string):
 		interp.parse(input_string, True)
 
 numbox.box()
-for y in xrange(1, YMAX - 5):
+for y in range(1, YMAX - 5):
 	numbox.addstr(numbox.getmaxyx()[0] - y - 1, 1, str(y - 1))
 
 loop = True
@@ -108,7 +108,7 @@ while loop:
 			stack += ['['] + interp.function_stack 
 		max_stack = min(len(stack), YMAX-5)
 		if max_stack >= 0:
-			for row in xrange(1,max_stack + 1):
+			for row in range(1,max_stack + 1):
 				stackbox.addstr(YMAX- 5 - row, 5, str(stack[-row]))
 		if interp.messages:
 			msgbox.addstr(1, 5, '| '.join(interp.messages))

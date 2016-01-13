@@ -258,7 +258,7 @@ class Interpreter(object):
 		self.stack = stack
 
 		self.operatorlist = self.builtin_functions.keys()
-		self.operatorlist.sort( key=lambda a: len(a), reverse=True)
+		self.operatorlist = sorted(self.operatorlist, key=lambda a: len(a), reverse=True)
 
 		self.variables = {}
 
@@ -291,13 +291,13 @@ class Interpreter(object):
 				else:
 					mine = len(self.stack)
 					parents = count - mine
-					for x in xrange(mine):
+					for x in range(mine):
 						vals.append(self.stack.pop())
 					vals += self.parent.pop(parents)
 			else:
 				raise NotEnoughOperands('Not Enough Operands (No Parent)')
 		else:
-			for x in xrange(count):
+			for x in range(count):
 				vals.append(self.stack.pop())
 		return vals
 	

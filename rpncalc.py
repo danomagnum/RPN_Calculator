@@ -46,8 +46,6 @@ def remove(interp, a):
 def show_vars(interp):
 	for value in interp.variables.itervalues():
 		interp.message(str(value))
-def test(interp):
-	pass
 def comment(interp, a, b):
 	if hasattr(a, 'name'):
 		b.comment = a.name
@@ -159,7 +157,6 @@ ops = {'+': add,
        '`': remove,
        'drop': remove,
        '?': show_vars,
-       'test': test,
        '\'': comment,
        '==': equal,
        '>': greater,
@@ -356,7 +353,7 @@ class Interpreter(object):
 			i.parse(x)
 		for item in i.stack:
 			if hasattr(item, 'name'):
-				if item.name not in self.variables.keys():
+				if item.name not in self.variables.keys() or item.name[0] == '$':
 					# was a local variable
 					if type(item) is Variable:
 						item = Value(item.val, item.comment)
@@ -368,6 +365,7 @@ class Interpreter(object):
 
 
 	def parse(self, input_string, root = False):
+		self.message(input_string);
 		if input_string == '':
 			return
 
@@ -448,6 +446,7 @@ class Interpreter(object):
 								return
 						#must be a variable
 						if input_string[0] not in '0123456789.':
+							self.message(input_string)
 							self.push(self.get_var(input_string))
 
 		except (NotEnoughOperands, CantAssign, CantCloseBlock, CantExecute) as e:
@@ -473,12 +472,13 @@ class Interpreter(object):
 	
 	def get_var(self, name, create = True):
 		if name not in self.variables.keys():
-			if self.parent is not None:
-				var = self.parent.get_var(name, False)
-				if var is not None:
-					return var
-				#if name in self.parent.variables.keys():
-					#return self.parent.get_var(name)
+			if name[0] != '$':
+				if self.parent is not None:
+					var = self.parent.get_var(name, False)
+					if var is not None:
+						return var
+					#if name in self.parent.variables.keys():
+						#return self.parent.get_var(name)
 			if create:
 				return self.new_var(name)
 			else:

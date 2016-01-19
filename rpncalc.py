@@ -27,7 +27,7 @@ def convert_int(interp, a):
 	return [Value(int(a.val))]
 def convert_float(interp, a):
 	return [Value(float(a))]
-def modulus(interp, a,b):
+def modulus(interp, b,a):
 	comment = ''
 	if a.comment and b.comment:
 		comment = a.comment + '+' + b.comment
@@ -132,18 +132,18 @@ def roll(interp, number):
 def exponent(interp, b, a):
 	comment = ''
 	if a.comment and b.comment:
-		comment = a.comment + '+' + b.comment
+		comment = a.comment + '^' + b.comment
 	return [Value(a.val ** b.val, comment)]
 
 def size(interp):
 	return [Value(interp.stacksize())]
 
  # default built in functions
-ops = {'+': add,
-       '-': sub,
-       '*': mult,
-       '/': div,
-       '%': modulus,
+ops = {'+': add, # tested
+       '-': sub, # tested
+       '*': mult, # tested
+       '/': div, # tested
+       '%': modulus, # tested
        'int': convert_int,
        'float': convert_float,
        'swap': swap,
@@ -158,15 +158,15 @@ ops = {'+': add,
        'drop': remove,
        '?': show_vars,
        '\'': comment,
-       '==': equal,
-       '>': greater,
-       '<': less,
-       '>=': gequal,
-       '<=': lequal,
+       '==': equal, # tested
+       '>': greater, # tested
+       '<': less, # tested
+       '>=': gequal, # tested
+       '<=': lequal, # tested
        '!': call,
        'if': condition_if,
        'ifelse': condition_ifelse,
-       '^': exponent,
+       '^': exponent, # tested
        'size': size}
 
  #functions which cannot appear in a variable name. (ex: testsize will be a variable, but test+ will beak into test and +).
@@ -250,6 +250,10 @@ class Variable(object):
 		if self.comment:
 			string += '  (' + self.comment + ')'
 		return string
+	def __eq__(self, other):
+		return self.val == other.val
+	def __ne__(self, other):
+		return self.val != other.val
 
 class Value(object):
 	def __init__(self, val=0, comment='') :
@@ -262,6 +266,10 @@ class Value(object):
 		if self.comment:
 			string += '  (' + self.comment + ')'
 		return string
+	def __eq__(self, other):
+		return self.val == other.val
+	def __ne__(self, other):
+		return self.val != other.val
 
 class Interpreter(object):
 	def __init__(self, builtin_functions=None, inline_break_list=None, stack=None, parent=None):

@@ -4,6 +4,7 @@ import curses
 import sys
 import os
 import math
+import pkgutil
 
 screen = curses.initscr()
 screen.keypad(1)
@@ -16,8 +17,23 @@ msgbox   = curses.newwin(3,XMAX -1,YMAX-3,0)
 numbox = curses.newwin(YMAX-4, 4, 0, 0)
 inputbox.keypad(1)
 
+loaded_plugins = {}
+#load the plugins
+def load_all_modules_from_dir(dirname):
+	for importer, package_name, _ in pkgutil.iter_modules([dirname]):
+		full_package_name = '%s.%s' % (dirname, package_name)
+		if full_package_name not in sys.modules:
+			module = importer.find_module(package_name).load_module(full_package_name)
+			yield module
 
-interp = rpncalc.Interpreter(rpncalc.ops)
+
+for module in load_all_modules_from_dir('plugins'):
+	loaded_plugins.update(module.register())
+
+function_list = rpncalc.ops.copy()
+function_list.update(loaded_plugins)
+
+interp = rpncalc.Interpreter(function_list, rpncalc.inline_break)
 
 
 class ShutErDownBoys(Exception):

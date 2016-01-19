@@ -138,7 +138,7 @@ def exponent(interp, b, a):
 def size(interp):
 	return [Value(interp.stacksize())]
 
-
+ # default built in functions
 ops = {'+': add,
        '-': sub,
        '*': mult,
@@ -168,6 +168,26 @@ ops = {'+': add,
        'ifelse': condition_ifelse,
        '^': exponent,
        'size': size}
+
+ #functions which cannot appear in a variable name. (ex: testsize will be a variable, but test+ will beak into test and +).
+inline_break = {'+': add,
+                '-': sub,
+                '*': mult,
+                '/': div,
+                '%': modulus,
+                '=': assign,
+                '`': remove,
+                '?': show_vars,
+                '\'': comment,
+                '==': equal,
+                '>': greater,
+                '<': less,
+                '>=': gequal,
+                '<=': lequal,
+                '!': call,
+                '^': exponent}
+
+
 
 class NotEnoughOperands(Exception):
 	pass
@@ -244,11 +264,16 @@ class Value(object):
 		return string
 
 class Interpreter(object):
-	def __init__(self, builtin_functions=None, stack=None, parent=None):
+	def __init__(self, builtin_functions=None, inline_break_list=None, stack=None, parent=None):
 		if builtin_functions is None:
-			builtin_functions = []
+			builtin_functions = {}
 
 		self.builtin_functions = builtin_functions
+
+		if inline_break_list is None:
+			inline_break_list = {}
+
+		self.inline_break_list = inline_break_list
 
 		if stack is None:
 			stack = []
@@ -348,7 +373,7 @@ class Interpreter(object):
 			self.function_stack.append(']')
 
 	def call(self, function):
-		i = Interpreter(self.builtin_functions,parent=self)
+		i = Interpreter(self.builtin_functions,self.inline_break_list,parent=self)
 		for x in function.stack:
 			i.parse(x)
 		for item in i.stack:
@@ -434,7 +459,7 @@ class Interpreter(object):
 					else:
 						#the input string is not just a function shorthand.
 						#search through the string and see if there are any functions here.
-						for funcname in self.operatorlist:
+						for funcname in self.inline_break_list:
 							if funcname in input_string:
 								components = input_string.split(funcname)
 								if components[-1] == '':

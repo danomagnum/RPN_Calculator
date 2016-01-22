@@ -143,7 +143,9 @@ class Bulk(unittest.TestCase):
 bulk_tests = [('5 1 2 + 4 * + 3 -', 14),
               ('3 1 2 + *', 9),
               ('4 2 5 * + 1 3 2 * + /', 2),
-	      ('9 5 3 + 2 4 ^ - +', 1)]
+	      ('9 5 3 + 2 4 ^ - +', 1),
+	      ('6 4 5 + * 25 2 3 + / -', 49)]
+
 test_id = 0
 for test in bulk_tests:
 	test_id += 1

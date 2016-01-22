@@ -139,6 +139,7 @@ def size(interp):
 	return [Value(interp.stacksize())]
 
  # default built in functions
+# TODO: add sin, cos, ln, log, etc.
 ops = {'+': add, # tested
        '-': sub, # tested
        '*': mult, # tested
@@ -398,7 +399,6 @@ class Interpreter(object):
 
 
 	def parse(self, input_string, root = False):
-		self.message(input_string);
 		if input_string == '':
 			return
 

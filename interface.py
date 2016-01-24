@@ -63,7 +63,7 @@ def editor_validator(keystroke):
 	tbox.do_command(keystroke)
 
 def import_file(filename):
-	f = open(os.path.join('functions', filename))
+	f = open(filename)
 	commands = f.read()
 	f.close()
 	for command in commands.split('\n'):
@@ -77,7 +77,7 @@ def parse(input_string):
 		input_string = input_string[1:]
 		text = input_string.split()
 		if text[0] == 'import':
-			import_file(text[1])
+			import_file(os.path.join(functions_directory, text[1]))
 
 		elif text[0] == 'export':
 			f = open(os.path.join(settings.function_directory, text[1]), 'w+')
@@ -108,7 +108,7 @@ def parse(input_string):
 if settings.auto_import_functions:
 	for dirpath, dirnames, filenames in os.walk(settings.auto_functions_directory):
 		for filename in filenames:
-			import_file(filename)
+			import_file(os.path.join(settings.auto_functions_directory, filename))
 
 
 numbox.box()

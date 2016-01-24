@@ -234,8 +234,12 @@ class OperandCounts(unittest.TestCase):
 
 			self.assertRaises(rpncalc.NotEnoughOperands,self.interp.parse,'two')
 
-
-
+class While(unittest.TestCase):
+	def setUp(self):
+		self.interp = rpncalc.Interpreter(rpncalc.ops, rpncalc.inline_break)
+	def test_break_outside_loop(self):
+		pass
+	
 class Bulk(unittest.TestCase):
 	def setUp(self):
 		self.interp = rpncalc.Interpreter(rpncalc.ops, rpncalc.inline_break)

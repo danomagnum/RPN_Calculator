@@ -88,24 +88,53 @@ def call(interp, a):
 	else:
 		raise CantExecute('Cannot Execute a Non-Function')
 
-def condition_if(interp, b, a):
-	if a.val == 1:
-		if type(b) is Function:
-			interp.call(b)
+def condition_if(interp, func, condition):
+	if condition.val == 1:
+		if type(func) is Function:
+			interp.call(func)
 		else:
-			return [ b ] 
+			return [ func ] 
 
-def condition_ifelse(interp, c, b, a):
-	if a.val == 1:
-		if type(b) is Function:
-			interp.call(b)
+def condition_ifelse(interp, func_false, func_true, condition):
+	if condition.val == 1:
+		if type(func_true) is Function:
+			interp.call(func_true)
 		else:
-			return [ b ]
+			return [ func_true ]
 	else:
-		if type(c) is Function:
-			interp.call(c)
+		if type(func_false) is Function:
+			interp.call(func_false)
 		else:
-			return [ c ]
+			return [ func_false ]
+
+def condition_while(interp, func):
+	interp.loop_count += 1
+
+	if type(func) is not Function:
+		raise CantExecute('While loop needs a function')
+
+	result = 1
+	try:
+		while result == 1:
+			interp.call(func)
+
+			condition_result = interp.pop()[0]
+			result = condition_result.val
+	except WhileBreak:
+		pass
+
+	interp.loop_count -= 1
+	return []
+
+
+def condition_while_break(interp):
+	if interp.loop_count > 0:
+		raise WhileBreak()
+	else:
+		interp.message("Not in a loop, cannot break")
+	return []
+
+
 
 def duplicate(interp, a):
 	return [a, a]
@@ -139,7 +168,6 @@ def size(interp):
 	return [Value(interp.stacksize())]
 
  # default built in functions
-# TODO: add sin, cos, ln, log, etc.
 ops = {'+': add, # tested
        '-': sub, # tested
        '*': mult, # tested
@@ -167,6 +195,8 @@ ops = {'+': add, # tested
        '!': call,
        'if': condition_if,
        'ifelse': condition_ifelse,
+       'while': condition_while,
+       'break': condition_while_break,
        '^': exponent, # tested
        'size': size}
 
@@ -200,6 +230,9 @@ class CantAssign(Exception):
 	pass
 
 class CantExecute(Exception):
+	pass
+
+class WhileBreak(Exception):
 	pass
 
 class Function(object):
@@ -302,6 +335,7 @@ class Interpreter(object):
 		self.function_depth = 0
 
 		self.parent = parent
+		self.loop_count = 0
 
 	def __str__(self):
 		stackstring = ''
@@ -380,12 +414,9 @@ class Interpreter(object):
 			self.push(f)
 		else:
 			self.function_stack.append(']')
-
-	def call(self, function):
-		i = Interpreter(self.builtin_functions,self.inline_break_list,parent=self)
-		for x in function.stack:
-			i.parse(x)
-		for item in i.stack:
+	
+	def absorb_child(self, child):
+		for item in child.stack:
 			if hasattr(item, 'name'):
 				if item.name not in self.variables.keys() or item.name[0] == '$':
 					# was a local variable
@@ -396,7 +427,21 @@ class Interpreter(object):
 						item.name = None # make it a lambda
 
 			self.push(item)
+		self.messages += child.messages
 
+
+	def call(self, function):
+		i = Interpreter(self.builtin_functions,self.inline_break_list,parent=self)
+		i.loop_count = self.loop_count
+		try:
+			for x in function.stack:
+				i.parse(x)
+		except WhileBreak as e:
+			self.absorb_child(i)
+			raise e
+
+		self.absorb_child(i)
+	
 
 	def parse(self, input_string, root = False):
 		if input_string == '':
@@ -479,16 +524,18 @@ class Interpreter(object):
 								return
 						#must be a variable
 						if input_string[0] not in '0123456789.':
-							self.message(input_string)
 							self.push(self.get_var(input_string))
 
-		except (NotEnoughOperands, CantAssign, CantCloseBlock, CantExecute) as e:
+		except (NotEnoughOperands, CantAssign, CantCloseBlock, CantExecute, TypeError) as e:
 			if root:
 				self.message((e.message) + ' - Stack Unchanged')
 				self.restore()
 				return
 			else:
 				raise
+		except WhileBreak as e:
+			raise e
+
 		except Exception as e:
 			if root:
 				self.message(str(e.message) + ' - Stack Unchanged')

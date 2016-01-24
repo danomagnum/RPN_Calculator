@@ -69,9 +69,11 @@ def parse(input_string):
 			f = open(os.path.join('functions', text[1]))
 			commands = f.read()
 			f.close()
-			for command in commands.split():
-			#commands = ' '.join(commands.split())
-				parse(command)
+			for command in commands.split('\n'):
+				if len(command) > 0:
+					if command[0] == "#":
+						continue
+					parse(command)
 		elif text[0] == 'export':
 			f = open(os.path.join('functions', text[1]), 'w+')
 			commands = interp.stack[-1].stack
@@ -103,6 +105,7 @@ for y in range(1, YMAX - 5):
 	numbox.addstr(numbox.getmaxyx()[0] - y - 1, 1, str(y - 1))
 
 loop = True
+
 while loop:
 	try:
 		screen.clear()

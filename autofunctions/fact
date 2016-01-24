@@ -11,3 +11,4 @@
  if
 ]
 fact = # set up the function name so we can recurse to it
+drop

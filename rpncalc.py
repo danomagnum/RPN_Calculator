@@ -167,6 +167,12 @@ def exponent(interp, b, a):
 def size(interp):
 	return [Value(interp.stacksize())]
 
+def negate(interp, a):
+	if a.val == 1:
+		return [ Value(0) ]
+	else:
+		return [ Value(1) ]
+
  # default built in functions
 ops = {'+': add, # tested
        '-': sub, # tested
@@ -192,6 +198,7 @@ ops = {'+': add, # tested
        '<': less, # tested
        '>=': gequal, # tested
        '<=': lequal, # tested
+       'not': negate, # tested
        '!': call,
        'if': condition_if,
        'ifelse': condition_ifelse,

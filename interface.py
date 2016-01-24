@@ -5,6 +5,7 @@ import sys
 import os
 import math
 import pkgutil
+import settings
 
 screen = curses.initscr()
 screen.keypad(1)
@@ -61,21 +62,25 @@ def editor_validator(keystroke):
 	message = str(keystroke)
 	tbox.do_command(keystroke)
 
+def import_file(filename):
+	f = open(os.path.join('functions', filename))
+	commands = f.read()
+	f.close()
+	for command in commands.split('\n'):
+		if len(command) > 0:
+			if command[0] == "#":
+				continue
+			parse(command)
+
 def parse(input_string):
 	if input_string[0] == ':': # interface commands start with a colon
 		input_string = input_string[1:]
 		text = input_string.split()
 		if text[0] == 'import':
-			f = open(os.path.join('functions', text[1]))
-			commands = f.read()
-			f.close()
-			for command in commands.split('\n'):
-				if len(command) > 0:
-					if command[0] == "#":
-						continue
-					parse(command)
+			import_file(text[1])
+
 		elif text[0] == 'export':
-			f = open(os.path.join('functions', text[1]), 'w+')
+			f = open(os.path.join(settings.function_directory, text[1]), 'w+')
 			commands = interp.stack[-1].stack
 			for cmd in commands:
 				f.write(cmd)
@@ -99,6 +104,12 @@ def parse(input_string):
 
 	else:
 		interp.parse(input_string, True)
+
+if settings.auto_import_functions:
+	for dirpath, dirnames, filenames in os.walk(settings.auto_functions_directory):
+		for filename in filenames:
+			import_file(filename)
+
 
 numbox.box()
 for y in range(1, YMAX - 5):

@@ -237,8 +237,23 @@ class OperandCounts(unittest.TestCase):
 class While(unittest.TestCase):
 	def setUp(self):
 		self.interp = rpncalc.Interpreter(rpncalc.ops, rpncalc.inline_break)
+
 	def test_break_outside_loop(self):
-		pass
+		self.interp.parse('break')
+		self.assertEqual(self.interp.messages[0], 'Not in a loop, cannot break')
+
+	def test_basic_countdown(self):
+		self.interp.parse('5 [ dup 1 - dup 0 < ] while')
+		result = [5, 4, 3, 2, 1, 0]
+		result2 = [rpncalc.Value(i) for i in result]
+		self.assertEqual(self.interp.stack, result2)
+
+	def test_break(self):
+		self.interp.parse('1 2 3 4 5 6 7 [ 4 >= [ 4 break ] if 1 ] while')
+		result = [1, 2, 3, 4]
+		result2 = [rpncalc.Value(i) for i in result]
+		self.assertEqual(self.interp.stack, result2)
+
 	
 class Bulk(unittest.TestCase):
 	def setUp(self):

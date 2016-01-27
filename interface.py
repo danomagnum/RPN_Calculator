@@ -309,6 +309,14 @@ while loop:
 					input_string_post = ''
 					input_string_pre = ''
 					parse(input_string)
+			elif event == 262: #home key
+				input_string_post = input_string_pre + input_string_post
+				input_string_pre = ''
+			elif event == 360: #end key
+				input_string_pre = input_string_pre + input_string_post
+				input_string_post = ''
+			else:
+				interp.message(str(event))
 
 
 	except ShutErDownBoys:

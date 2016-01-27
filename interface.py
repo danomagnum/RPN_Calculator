@@ -7,6 +7,12 @@ import math
 import pkgutil
 import settings
 
+STACK = 0
+GRAPH_XY = 1
+GRAPH_X = 2
+
+mode = STACK
+
 screen = curses.initscr()
 screen.keypad(1)
 YMAX, XMAX = screen.getmaxyx()
@@ -76,6 +82,7 @@ def import_file(filename):
 			parse(command)
 
 def parse(input_string):
+	global mode
 	if input_string[0] == ':': # interface commands start with a colon
 		input_string = input_string[1:]
 		text = input_string.split()
@@ -83,7 +90,7 @@ def parse(input_string):
 			import_file(os.path.join(functions_directory, text[1]))
 
 		elif text[0] == 'export':
-			f = open(os.path.join(settings.function_directory, text[1]), 'w+')
+			f = open(os.path.join(settings.functions_directory, text[1]), 'w+')
 			commands = interp.stack[-1].stack
 			for cmd in commands:
 				f.write(cmd)
@@ -104,6 +111,23 @@ def parse(input_string):
 				interp.parse(str(res))
 			except Exception as e:
 				raise BadPythonCommand('Bad Python Command (' + command + ') ' + e.message)
+		elif text[0] == 'graph':
+			if len(text) > 1:
+				if text[1] == 'x':
+					mode = GRAPH_X
+					interp.message("X Graph Mode")
+				elif text[1] == 'xy':
+					mode = GRAPH_XY
+					interp.message("XY Graph Mode")
+			elif mode == GRAPH_XY:
+				mode = GRAPH_X
+				interp.message("X Graph Mode")
+			else:
+				mode = GRAPH_XY
+				interp.message("XY Graph Mode")
+		elif text[0] == 'stack':
+			interp.message("Stack Mode")
+			mode = STACK
 
 	else:
 		interp.parse(input_string, True)
@@ -135,14 +159,92 @@ while loop:
 		inputbox.addstr(1, 2, input_string_pre)
 		inputbox.addstr(1, 2 + len(input_string_pre), input_string_post)
 
-		stack = interp.stack[:]
 
-		if interp.function_stack is not None:
-			stack += ['['] + interp.function_stack 
-		max_stack = min(len(stack), YMAX-5)
-		if max_stack >= 0:
-			for row in range(1,max_stack + 1):
-				stackbox.addstr(YMAX- 5 - row, 5, str(stack[-row]))
+		if mode == STACK:
+			stack = interp.stack[:]
+			if interp.function_stack is not None:
+				stack += ['['] + interp.function_stack 
+			max_stack = min(len(stack), YMAX-5)
+			if max_stack >= 0:
+				for row in range(1,max_stack + 1):
+					stackbox.addstr(YMAX- 5 - row, 5, str(stack[-row]))
+		elif mode == GRAPH_XY:
+			stackbox.clear()
+			stack = interp.stack[:]
+			xs = [x.val for x in stack[::2] if type(x) is not rpncalc.Function]
+			ys = [y.val for y in stack[1::2] if type(y) is not rpncalc.Function]
+			maxlength = min(len(xs), len(ys))
+			if maxlength <= 1:
+				mode = STACK
+				continue
+			x0 = min(xs)
+			xmax = max(xs)
+			dx = xmax - x0
+			y0 = min(ys)
+			ymax = max(ys)
+			dy = ymax - y0
+
+
+			frame_ymax, frame_xmax = stackbox.getmaxyx()
+			frame_ymax -= 3
+			frame_xmax -= 3
+			frame_x0 = 3
+			frame_dx = frame_xmax - frame_x0
+			frame_y0 = 1
+			frame_dy = frame_ymax - frame_y0
+
+			lastx = xs[0]
+			lasty = ys[0]
+
+			for index in range(maxlength):
+				xpos = int(frame_x0 + frame_dx * (xs[index] - x0)/dx + 1)
+				ypos = int(frame_y0 + frame_dy * (ymax - ys[index])/dy + 1)
+				deltax = xs[index] - lastx
+				deltay = ys[index] - lasty
+				
+				if deltax == 0:
+					symbol = '|'
+				else:
+					slope = float(deltay) / float(deltax)
+					if slope > 0:
+						symbol = '/'
+					elif slope == 0:
+						symbol = '-'
+					else:
+						symbol = '\\'
+				lastx = xs[index]
+				lasty = ys[index]
+
+				stackbox.addstr(ypos, xpos, symbol)
+
+		elif mode == GRAPH_X:
+			stackbox.clear()
+			stack = interp.stack[:]
+			xs = [x.val for x in interp.stack if type(x) is not rpncalc.Function]
+			x0 = min(xs)
+			xmax = max(xs)
+			dx = xmax - x0
+
+			frame_ymax, frame_xmax = stackbox.getmaxyx()
+			frame_ymax -= 3
+			frame_xmax -= 3
+			frame_x0 = 4
+			frame_dx = frame_xmax - frame_x0
+			frame_y0 = 1
+			frame_dy = frame_ymax - frame_y0
+
+			maxlength = min(len(xs), frame_xmax - frame_x0)
+
+			if maxlength <= 1:
+				mode = STACK
+				continue
+
+
+			for index in range(maxlength):
+				xpos = index + frame_x0
+				ypos = int(frame_y0 + frame_dy * (xmax - xs[index])/dx + 1)
+				stackbox.addstr(ypos, xpos, 'X')
+
 		if interp.messages:
 			msgbox.addstr(1, 5, '| '.join(interp.messages))
 
@@ -206,10 +308,6 @@ while loop:
 
 					parse(input_string)
 
-		#inputbox.overlay(screen)
-		#stackbox.overlay(screen)
-		#msgbox.overlay(screen)
-		#screen.refresh()
 
 	except ShutErDownBoys:
 		loop = False

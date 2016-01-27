@@ -18,3 +18,11 @@
   ]
   allbut =
   drop
+
+[
+  [ drop
+    all !
+    ] while
+] clear =
+  drop
+ 

@@ -26,7 +26,7 @@ def div(interp, b, a):
 def convert_int(interp, a):
 	return [Value(int(a.val))]
 def convert_float(interp, a):
-	return [Value(float(a))]
+	return [Value(float(a.val))]
 def modulus(interp, b,a):
 	comment = ''
 	if a.comment and b.comment:

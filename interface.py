@@ -58,6 +58,9 @@ input_string_post = ''
 history = []
 history_position = 0
 
+historyfile = open('history', 'r')
+history = historyfile.readlines()
+
 inputbox.box()
 stackbox.box()
 msgbox.box()
@@ -305,7 +308,6 @@ while loop:
 					history_position = 0
 					input_string_post = ''
 					input_string_pre = ''
-
 					parse(input_string)
 
 
@@ -332,6 +334,15 @@ for v in interp.stack:
 
 for x in rpncalc.log:
 	print(x)
+
+if settings.history > 0:
+	historyfile = open('history', 'w')
+	history_to_log = history
+	if len(history) > settings.history:
+		history_to_log = history[-settings.history:]
+	for historyitem in history_to_log:
+		historyfile.write(('%s\n' % historyitem.strip()))
+	historyfile.close()
 
 
 sys.exit(0)

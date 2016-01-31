@@ -1,5 +1,5 @@
 import rpncalc
-import readline
+#import readline
 import curses
 import sys
 import os
@@ -141,11 +141,20 @@ if settings.auto_import_functions:
 			import_file(os.path.join(settings.auto_functions_directory, filename))
 
 
-numbox.box()
-for y in range(1, YMAX - 5):
-	numbox.addstr(numbox.getmaxyx()[0] - y - 1, 1, str(y - 1))
-
+def setupnumbox():
+	numbox.clear()
+	numbox.box()
+	for y in range(1, YMAX - 5):
+		numbox.addstr(numbox.getmaxyx()[0] - y - 1, 1, str(y - 1))
+setupnumbox()
 loop = True
+
+screen.clear()
+inputbox.overlay(screen)
+stackbox.overlay(screen)
+msgbox.overlay(screen)
+numbox.overlay(screen)
+screen.refresh()
 
 while loop:
 	try:
@@ -162,6 +171,82 @@ while loop:
 		inputbox.addstr(1, 2, input_string_pre)
 		inputbox.addstr(1, 2 + len(input_string_pre), input_string_post)
 
+		event = inputbox.getch(1, 2 + len(input_string_pre))
+
+		if event == 13:
+			event = curses.KEY_ENTER
+		if event == 10:
+			event = curses.KEY_ENTER
+		elif event == 8:
+			event = curses.KEY_BACKSPACE
+		elif event == 127:
+			event = curses.KEY_DC
+
+		if event <= 255:
+			if event > 0:
+				input_string_pre += chr(event)
+		else:
+			if event == curses.KEY_BACKSPACE:
+				if len(input_string_pre) > 0:
+					input_string_pre = input_string_pre[:-1]
+			elif event == curses.KEY_DC:
+				if len(input_string_post) > 0:
+					input_string_post = input_string_post[1:]
+			elif event == curses.KEY_LEFT:
+				if len(input_string_pre) > 0:
+					input_string_post = input_string_pre[-1] + input_string_post
+					input_string_pre = input_string_pre[:-1]
+			elif event == curses.KEY_RIGHT:
+				if len(input_string_post) > 0:
+					input_string_pre = input_string_pre + input_string_post[0]
+					input_string_post = input_string_post[1:]
+			elif event == curses.KEY_UP:
+				if history_position < len(history):
+					history_position += 1
+					input_string_post = ''
+					input_string_pre = history[-history_position]
+			elif event == curses.KEY_DOWN:
+				if history_position > 1:
+					history_position -= 1
+					input_string_post = ''
+					input_string_pre = history[-history_position]
+				if history_position == 1:
+					input_string_post = ''
+					input_string_pre = ''
+			elif event == curses.KEY_ENTER:
+				input_string = input_string_pre + input_string_post
+				if input_string != '':
+					history.append(input_string)
+					history_position = 0
+					input_string_post = ''
+					input_string_pre = ''
+					parse(input_string)
+			elif event == 262: #home key
+				input_string_post = input_string_pre + input_string_post
+				input_string_pre = ''
+			elif event == 360: #end key
+				input_string_pre = input_string_pre + input_string_post
+				input_string_post = ''
+			elif event == curses.KEY_RESIZE:
+				if curses.is_term_resized(YMAX, XMAX):
+					YMAX, XMAX = screen.getmaxyx()
+					interp.message("Screen Resized to " + str(YMAX) + ", " + str(XMAX))
+					screen.clear
+					curses.resizeterm(YMAX, XMAX)
+					screen.resize(YMAX, XMAX)
+					stackbox.resize(YMAX-4,XMAX -1)
+					inputbox.resize(3,XMAX -1)
+					msgbox.resize(3,XMAX -1)
+					numbox.resize(YMAX-4, 4)
+
+					stackbox.mvwin(0,0)
+					inputbox.mvwin(YMAX-5,0)
+					msgbox.mvwin(YMAX-3,0)
+					numbox.mvwin( 0, 0)
+
+					setupnumbox()
+			else:
+				interp.message(str(event))
 
 		if mode == STACK:
 			stack = interp.stack[:]
@@ -251,6 +336,7 @@ while loop:
 		if interp.messages:
 			msgbox.addstr(1, 5, '| '.join(interp.messages))
 
+
 		screen.clear()
 		inputbox.overlay(screen)
 		stackbox.overlay(screen)
@@ -259,64 +345,6 @@ while loop:
 		screen.refresh()
 
 
-		event = inputbox.getch(1, 2 + len(input_string_pre))
-
-		if event == 13:
-			event = curses.KEY_ENTER
-		if event == 10:
-			event = curses.KEY_ENTER
-		elif event == 8:
-			event = curses.KEY_BACKSPACE
-		elif event == 127:
-			event = curses.KEY_DC
-
-		if event <= 255:
-			if event > 0:
-				input_string_pre += chr(event)
-		else:
-			if event == curses.KEY_BACKSPACE:
-				if len(input_string_pre) > 0:
-					input_string_pre = input_string_pre[:-1]
-			elif event == curses.KEY_DC:
-				if len(input_string_post) > 0:
-					input_string_post = input_string_post[1:]
-			elif event == curses.KEY_LEFT:
-				if len(input_string_pre) > 0:
-					input_string_post = input_string_pre[-1] + input_string_post
-					input_string_pre = input_string_pre[:-1]
-			elif event == curses.KEY_RIGHT:
-				if len(input_string_post) > 0:
-					input_string_pre = input_string_pre + input_string_post[0]
-					input_string_post = input_string_post[1:]
-			elif event == curses.KEY_UP:
-				if history_position < len(history):
-					history_position += 1
-					input_string_post = ''
-					input_string_pre = history[-history_position]
-			elif event == curses.KEY_DOWN:
-				if history_position > 1:
-					history_position -= 1
-					input_string_post = ''
-					input_string_pre = history[-history_position]
-				if history_position == 1:
-					input_string_post = ''
-					input_string_pre = ''
-			elif event == curses.KEY_ENTER:
-				input_string = input_string_pre + input_string_post
-				if input_string != '':
-					history.append(input_string)
-					history_position = 0
-					input_string_post = ''
-					input_string_pre = ''
-					parse(input_string)
-			elif event == 262: #home key
-				input_string_post = input_string_pre + input_string_post
-				input_string_pre = ''
-			elif event == 360: #end key
-				input_string_pre = input_string_pre + input_string_post
-				input_string_post = ''
-			else:
-				interp.message(str(event))
 
 
 	except ShutErDownBoys:

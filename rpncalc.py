@@ -3,6 +3,11 @@ import copy
 
 log = []
 
+DISPLAY_BIN = 2
+DISPLAY_DEC = 10
+DISPLAY_OCT = 8
+DISPLAY_HEX = 16
+
 def add(interp, b, a):
 	comment = ''
 	if a.comment and b.comment:
@@ -173,6 +178,37 @@ def negate(interp, a):
 	else:
 		return [ Value(1) ]
 
+def binary(interp):
+	original = interp.stack[-1].mode
+	try:
+		interp.stack[-1].mode = DISPLAY_BIN
+		str(interp.stack[-1])
+	except:
+		interp.stack[-1].mode = original
+		interp.message("Could not change display mode to binary for " + str(interp.stack[-1]))
+		
+
+def hexadecimal(interp):
+	original = interp.stack[-1].mode
+	try:
+		interp.stack[-1].mode = DISPLAY_HEX
+		str(interp.stack[-1])
+	except:
+		interp.stack[-1].mode = original
+		interp.message("Could not change display mode to hex for " + str(interp.stack[-1]))
+
+def octal(interp):
+	original = interp.stack[-1].mode
+	try:
+		interp.stack[-1].mode = DISPLAY_OCT
+		str(interp.stack[-1])
+	except:
+		interp.stack[-1].mode = original
+		interp.message("Could not change display mode to octal for " + str(interp.stack[-1]))
+
+def decimal(interp):
+	interp.stack[-1].mode = DISPLAY_DEC
+
  # default built in functions
 ops = {'+': add, # tested
        '-': sub, # tested
@@ -205,7 +241,11 @@ ops = {'+': add, # tested
        'while': condition_while,
        'break': condition_while_break,
        '^': exponent, # tested
-       'size': size}
+       'size': size,
+       'bin': binary,
+       'hex': hexadecimal,
+       'oct': octal,
+       'dec': decimal}
 
  #functions which cannot appear in a variable name. (ex: testsize will be a variable, but test+ will beak into test and +).
 inline_break = {'+': add,
@@ -270,10 +310,11 @@ class Function(object):
 		return '[' + name + ']'
 
 class Variable(object):
-	def __init__(self, name, val=0, comment='') :
+	def __init__(self, name, val=0, comment='', mode=DISPLAY_DEC) :
 		self.name = name
 		self.val = val
 		self.comment = comment
+		self.mode = mode
 	def reassign(self, interp, val):
 		if type(val) == Variable:
 			self.val = val.val
@@ -287,7 +328,17 @@ class Variable(object):
 			return f
 
 	def __str__(self) :
-		string = str(self.name) + ' = ' + str(self.val)
+		string = str(self.name) + ' = '
+
+
+		if self.mode == DISPLAY_DEC:
+			string += str(self.val)
+		elif self.mode == DISPLAY_HEX:
+			string += "Ox%X" % self.val
+		elif self.mode == DISPLAY_OCT:
+			string += "0o%o" % self.val
+		elif self.mode == DISPLAY_BIN:
+			string += str(bin(self.val))
 		if self.comment:
 			string += '  (' + self.comment + ')'
 		return string
@@ -297,13 +348,23 @@ class Variable(object):
 		return self.val != other.val
 
 class Value(object):
-	def __init__(self, val=0, comment='') :
+	def __init__(self, val=0, comment='', mode=DISPLAY_DEC) :
 		self.val = val
 		self.comment = comment
+		self.mode = mode
 	def reassign(self, interp, val):
 		return None
 	def __str__(self) :
-		string = str(self.val)
+
+		if self.mode == DISPLAY_DEC:
+			string = str(self.val)
+		elif self.mode == DISPLAY_HEX:
+			string = "Ox%X" % self.val
+		elif self.mode == DISPLAY_OCT:
+			string = "0o%o" % self.val
+		elif self.mode == DISPLAY_BIN:
+			string = str(bin(self.val))
+
 		if self.comment:
 			string += '  (' + self.comment + ')'
 		return string
@@ -495,15 +556,19 @@ class Interpreter(object):
 
 				# check if the input is just a value.
 				try:
-					val = float(input_string)
-					if val.is_integer():
-						if '.' not in input_string:
-							val = int(val)
+					if input_string[0] == "0":
+						val = int(input_string, 0)
+						self.push(Value(val))
+					else:
+						val = float(input_string)
+						if val.is_integer():
+							if '.' not in input_string:
+								val = int(val)
 
-					self.push(Value(val))
+						self.push(Value(val))
 					return
 				except:
-				#the input is not just a value so lets see if it is a function
+					#the input is not just a value so lets see if it is a function
 					if input_string in self.operatorlist:
 						func = self.builtin_functions[input_string]
 						argcount = len(inspect.getargspec(func).args) - 1

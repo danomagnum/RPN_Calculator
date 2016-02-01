@@ -334,7 +334,8 @@ while loop:
 				stackbox.addstr(ypos, xpos, 'X')
 
 		if interp.messages:
-			msgbox.addstr(1, 5, '| '.join(interp.messages))
+			message_string = '| '.join(interp.messages)
+			msgbox.addstr(1, 5, message_string[:(XMAX - 8)])
 
 
 		screen.clear()

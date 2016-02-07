@@ -176,6 +176,13 @@ class Application(tk.Frame):
 		elif history_position == 1:
 			self.inputbox.delete(0,tk.END)
 
+	def CtrlC(self, event):
+		entry_text = self.inputbox.get()
+		if entry_text:
+			self.inputbox.delete(0,tk.END)
+		else:
+			self.quit()
+
 
 	def createWidgets(self):
 		self.stackframe = tk.Frame(self)
@@ -183,7 +190,7 @@ class Application(tk.Frame):
 
 		self.stackscroll = tk.Scrollbar(self.stackframe, orient=tk.VERTICAL)
 
-		self.stackbox = tk.Listbox(self.stackframe, yscrollcommand=self.stackscroll.set)
+		self.stackbox = tk.Listbox(self.stackframe, yscrollcommand=self.stackscroll.set, width=30)
 		self.stackscroll.config(command=self.stackbox.yview)
 		self.stackscroll.pack(side=tk.RIGHT, fill=tk.Y)
 		self.stackbox.pack(fill=tk.BOTH, expand=1)
@@ -194,13 +201,14 @@ class Application(tk.Frame):
 		self.inputbox.bind('<KP_Enter>', self.EnterKey)
 		self.inputbox.bind('<Up>', self.UpKey)
 		self.inputbox.bind('<Down>', self.DownKey)
+		self.inputbox.bind('<Control-c>', self.CtrlC)
 
 
 		self.messageframe = tk.Frame(self)
 		self.messageframe.pack(fill=tk.X, expand=0)
 		self.messagescrolly = tk.Scrollbar(self.messageframe, orient=tk.VERTICAL)
 
-		self.messagebox = tk.Listbox(self.messageframe, yscrollcommand=self.messagescrolly.set)
+		self.messagebox = tk.Listbox(self.messageframe, yscrollcommand=self.messagescrolly.set, height=3)
 
 		self.messagescrolly.config(command=self.messagebox.yview)
 		self.messagescrolly.pack(side=tk.RIGHT, fill=tk.Y)

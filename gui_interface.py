@@ -1,6 +1,9 @@
 import rpncalc
 #import readline
+import copy
+import pickle
 import Tkinter as tk
+import tkFileDialog
 import sys
 import os
 import math
@@ -121,6 +124,7 @@ if settings.auto_import_functions:
 
 loop = True
 
+root = tk.Tk()
 class Application(tk.Frame):
 	def __init__(self, master=None):
 		tk.Frame.__init__(self, master)
@@ -183,8 +187,80 @@ class Application(tk.Frame):
 		else:
 			self.quit()
 
+	def command_inserter(self, op):
+		return lambda: self.inputbox.insert(tk.END, ' %s' % op)
+
+	def showoperators(self):
+		self.operatormenu.delete(0,tk.END)
+		submenus = {}
+		submenus['Builtin'] = tk.Menu(self.operatormenu, tearoff=0)
+		for op in interp.operatorlist:
+			if '.' in op:
+				namespace, command = op.split('.')
+				if namespace not in submenus:
+					submenus[namespace] = tk.Menu(self.operatormenu, tearoff=0)
+				submenus[namespace].add_command(label=op, command=self.command_inserter(op))
+			else:
+				submenus['Builtin'].add_command(label=op, command=self.command_inserter(op))
+		for sub in submenus:
+			self.operatormenu.add_cascade(label=sub, menu=submenus[sub])
+
+	def showvars(self):
+		self.varmenu.delete(0,tk.END)
+		for op in interp.variables:
+			self.varmenu.add_command(label=op, command=self.command_inserter(op))
+
+
+	def save(self):
+		options = {}
+		options['defaultextension'] = '.rpn'
+		options['filetypes'] = [('all files', '.*'), ('rpn files', '.rpn')]
+		options['title'] = 'Save Session'
+		filename = tkFileDialog.asksaveasfilename(filetypes=[('RPN files', '.rpn'), ('all files', '*')], title='Load Session')
+		if filename:
+			interp2 = copy.deepcopy(interp)
+			interp2.builtin_functions = {}
+			interp2.operatorlist = []
+			f = open(filename, 'wb')
+			pickle.dump(interp2, f, 2)
+			f.close()
+			self.messagebox.insert(0, 'Saved as ' + filename)
+		else:
+			self.messagebox.insert(0, 'Invalid Filename ' + filename)
+
+	def load(self):
+		global interp
+		filename = tkFileDialog.askopenfilename(filetypes=[('RPN files', '.rpn'), ('all files', '*')], title='Load Session')
+		if filename:
+			f = open(filename, 'rb')
+			tmp = pickle.load(f)
+			f.close()
+			tmp.builtin_functions = interp.builtin_functions
+			tmp.operatorlist = interp.operatorlist
+			interp = tmp
+
+			self.stackbox.delete(0,tk.END)
+			for x in interp.stack[::-1]:
+				self.stackbox.insert(0, str(x))
+			self.stackbox.see(tk.END)
+			self.messagebox.insert(0, 'Loaded ' + filename)
+		else:
+			self.messagebox.insert(0, 'Invalid Filename ' + filename)
+
 
 	def createWidgets(self):
+		self.menubar = tk.Menu(self)
+		self.filemenu = tk.Menu(self.menubar, tearoff=0)
+		self.filemenu.add_command(label="quit", command=self.quit)
+		self.filemenu.add_command(label="save", command=self.save)
+		self.filemenu.add_command(label="load", command=self.load)
+		self.menubar.add_cascade(label="File", menu=self.filemenu)
+		self.operatormenu = tk.Menu(self.menubar, tearoff=0, postcommand=self.showoperators)
+		self.menubar.add_cascade(label="Operators", menu=self.operatormenu)
+		self.varmenu = tk.Menu(self.menubar, tearoff=0, postcommand=self.showvars)
+		self.menubar.add_cascade(label="Variables", menu=self.varmenu)
+		root.config(menu=self.menubar)
+
 		self.stackframe = tk.Frame(self)
 		self.stackframe.pack(fill=tk.BOTH, expand=1)
 
@@ -218,22 +294,6 @@ class Application(tk.Frame):
 app = Application()
 app.master.title('Python RPN Calculator')
 app.mainloop()
-
-'''
-			elif event == curses.KEY_UP:
-				if history_position < len(history):
-					history_position += 1
-					input_string_post = ''
-					input_string_pre = history[-history_position]
-			elif event == curses.KEY_DOWN:
-				if history_position > 1:
-					history_position -= 1
-					input_string_post = ''
-					input_string_pre = history[-history_position]
-				if history_position == 1:
-					input_string_post = ''
-					input_string_pre = ''
-'''
 
 for v in interp.stack:
 	print(v)

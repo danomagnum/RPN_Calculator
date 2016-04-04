@@ -1,12 +1,16 @@
 import inspect
 import copy
 
+import sys
+sys.setrecursionlimit(10000)
+
 log = []
 
 DISPLAY_BIN = 2
 DISPLAY_DEC = 10
 DISPLAY_OCT = 8
 DISPLAY_HEX = 16
+DISPLAY_ASCII = 128
 
 def add(interp, b, a):
 	comment = ''
@@ -187,6 +191,14 @@ def binary(interp):
 		interp.stack[-1].mode = original
 		interp.message("Could not change display mode to binary for " + str(interp.stack[-1]))
 		
+def ascii_mode(interp):
+	original = interp.stack[-1].mode
+	try:
+		interp.stack[-1].mode = DISPLAY_ASCII
+		str(interp.stack[-1])
+	except:
+		interp.stack[-1].mode = original
+		interp.message("Could not change display mode to ascii for " + str(interp.stack[-1]))
 
 def hexadecimal(interp):
 	original = interp.stack[-1].mode
@@ -208,6 +220,9 @@ def octal(interp):
 
 def decimal(interp):
 	interp.stack[-1].mode = DISPLAY_DEC
+
+def add_null(interp):
+	interp.push(NULL())
 
  # default built in functions
 ops = {'+': add, # tested
@@ -245,7 +260,9 @@ ops = {'+': add, # tested
        'bin': binary,
        'hex': hexadecimal,
        'oct': octal,
-       'dec': decimal}
+       'dec': decimal,
+       'ascii': ascii_mode,
+       'null': add_null}
 
  #functions which cannot appear in a variable name. (ex: testsize will be a variable, but test+ will beak into test and +).
 inline_break = {'+': add,
@@ -329,8 +346,6 @@ class Variable(object):
 
 	def __str__(self) :
 		string = str(self.name) + ' = '
-
-
 		if self.mode == DISPLAY_DEC:
 			string += str(self.val)
 		elif self.mode == DISPLAY_HEX:
@@ -339,6 +354,8 @@ class Variable(object):
 			string += "0o%o" % self.val
 		elif self.mode == DISPLAY_BIN:
 			string += str(bin(self.val))
+		elif self.mode == DISPLAY_ASCII:
+			string += str(repr(chr(self.val)))
 		if self.comment:
 			string += '  (' + self.comment + ')'
 		return string
@@ -346,6 +363,13 @@ class Variable(object):
 		return self.val == other.val
 	def __ne__(self, other):
 		return self.val != other.val
+
+class NULL(object):
+	def __init__(self, comment=''):
+		self.comment = comment
+	def __str__(self) :
+		return 'NULL'
+
 
 class Value(object):
 	def __init__(self, val=0, comment='', mode=DISPLAY_DEC) :
@@ -364,6 +388,8 @@ class Value(object):
 			string = "0o%o" % self.val
 		elif self.mode == DISPLAY_BIN:
 			string = str(bin(self.val))
+		elif self.mode == DISPLAY_ASCII:
+			string = str(repr(chr(self.val)))
 
 		if self.comment:
 			string += '  (' + self.comment + ')'
@@ -404,6 +430,8 @@ class Interpreter(object):
 
 		self.parent = parent
 		self.loop_count = 0
+
+		self.in_string = False
 
 	def __str__(self):
 		stackstring = ''
@@ -510,11 +538,9 @@ class Interpreter(object):
 
 		self.absorb_child(i)
 	
-
 	def parse(self, input_string, root = False):
 		if input_string == '':
 			return
-
 
 		if root:
 			self.backup()
@@ -522,6 +548,18 @@ class Interpreter(object):
 
 		try:
 			# first split the input up into multiple components if there are any and parse them in order
+
+			if self.in_string:
+				for pos in xrange(len(input_string)):
+					if input_string[pos] == '"':
+						self.in_string = False
+						self.parse(input_string[(pos + 1):])
+						return
+					val = Value(ord(input_string[pos]))
+					val.mode = DISPLAY_ASCII
+					self.push(val)
+				self.message("String Mode")
+				return
 
 			if '#' in input_string:
 				self.parse( input_string.split('#')[0])
@@ -552,7 +590,14 @@ class Interpreter(object):
 				if self.function_stack is not None:
 					self.function_stack.append(input_string)
 					return
-				
+				elif input_string[0] == '"':
+					self.in_string = True
+					if len(input_string) > 1:
+						self.parse(input_string[1:])
+
+					self.message("String Mode")
+					return
+
 
 				# check if the input is just a value.
 				try:
@@ -598,9 +643,9 @@ class Interpreter(object):
 						if input_string[0] not in '0123456789.':
 							self.push(self.get_var(input_string))
 
-		except (NotEnoughOperands, CantAssign, CantCloseBlock, CantExecute, TypeError) as e:
+		except (NotEnoughOperands, CantAssign, CantCloseBlock, CantExecute, TypeError, AttributeError) as e:
 			if root:
-				self.message((e.message) + ' - Stack Unchanged')
+				self.message('Stack Unchanged - ' + (e.message))
 				self.restore()
 				return
 			else:

@@ -592,6 +592,7 @@ class Interpreter(object):
 					return
 				elif input_string[0] == '"':
 					self.in_string = True
+					self.push(NULL())
 					if len(input_string) > 1:
 						self.parse(input_string[1:])
 

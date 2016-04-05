@@ -1,5 +1,3 @@
-math.exp
-`
 21
 math.fact
 `
@@ -198,3 +196,5 @@ ascii
 "	"
 clear
 !
+"abcd"
+"test"

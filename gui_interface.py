@@ -71,7 +71,11 @@ def parse(input_string):
 	if input_string[0] == ':': # interface commands start with a colon
 		input_string = input_string[1:]
 		text = input_string.split()
-		if text[0] == 'import':
+		if text[0] == 'step':
+			interp.step()
+		elif text[0] == 'run':
+			interp.resume()
+		elif text[0] == 'import':
 			import_file(os.path.join(functions_directory, text[1]))
 
 		elif text[0] == 'export':
@@ -131,9 +135,36 @@ class Application(tk.Frame):
 		self.pack(fill=tk.BOTH, expand=1)
 		self.createWidgets()
 		self.inputbox.focus_set()
+
+	def update_display(self):
+		self.stackbox.delete(0,tk.END)
+		stack = interp.get_stack()
+		if interp.function_stack is not None:
+			stack += ['['] + interp.function_stack 
+		if interp.paused:
+			stack += ['@'] + interp.get_broken_commands()
+
+		for x in stack[::-1]:
+			self.stackbox.insert(0, str(x))
+		self.stackbox.see(tk.END)
+
+		for msg in interp.messages:
+			self.messagebox.insert(0, str(msg))
+
+	def step(self):
+		interp.step()
+		self.update_display()
+	
+	def pause(self):
+		interp.parse('@')
+		self.update_display()
+
+	def resume(self):
+		interp.resume()
+		self.update_display()
+
 	def EnterKey(self, event):
 		try:
-			self.stackbox.delete(0,tk.END)
 			entry_text = self.inputbox.get()
 			self.inputbox.delete(0,tk.END)
 
@@ -141,12 +172,8 @@ class Application(tk.Frame):
 			history_position = 0
 
 			parse(entry_text)
-			for x in interp.stack[::-1]:
-				self.stackbox.insert(0, str(x))
-			self.stackbox.see(tk.END)
 
-			for msg in interp.messages:
-				self.messagebox.insert(0, str(msg))
+			self.update_display()
 
 		except ShutErDownBoys:
 			loop = False
@@ -239,10 +266,7 @@ class Application(tk.Frame):
 			tmp.operatorlist = interp.operatorlist
 			interp = tmp
 
-			self.stackbox.delete(0,tk.END)
-			for x in interp.stack[::-1]:
-				self.stackbox.insert(0, str(x))
-			self.stackbox.see(tk.END)
+			self.update_display()
 			self.messagebox.insert(0, 'Loaded ' + filename)
 		else:
 			self.messagebox.insert(0, 'Invalid Filename ' + filename)
@@ -259,6 +283,14 @@ class Application(tk.Frame):
 		self.menubar.add_cascade(label="Operators", menu=self.operatormenu)
 		self.varmenu = tk.Menu(self.menubar, tearoff=0, postcommand=self.showvars)
 		self.menubar.add_cascade(label="Variables", menu=self.varmenu)
+
+		self.controlmenu = tk.Menu(self.menubar, tearoff=0)
+		self.controlmenu.add_command(label="break", command=self.pause)
+		self.controlmenu.add_command(label="step", command=self.step)
+		self.controlmenu.add_command(label="resume", command=self.resume)
+		self.menubar.add_cascade(label="Control", menu=self.controlmenu)
+
+
 		root.config(menu=self.menubar)
 
 		self.stackframe = tk.Frame(self)

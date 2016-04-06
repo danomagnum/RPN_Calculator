@@ -91,7 +91,7 @@ def parse(input_string):
 		text = input_string.split()
 		if text[0] == 'step':
 			interp.step()
-		if text[0] == 'run':
+		elif text[0] == 'run':
 			interp.resume()
 		elif text[0] == 'import':
 			import_file(os.path.join(functions_directory, text[1]))

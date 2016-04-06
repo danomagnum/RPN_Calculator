@@ -224,6 +224,12 @@ def decimal(interp):
 def add_null(interp):
 	interp.push(NULL())
 
+def is_null(interp, a):
+	if type(a) is NULL:
+		return [Value(1)]
+	else:
+		return [Value(0)]
+
  # default built in functions
 ops = {'+': add, # tested
        '-': sub, # tested
@@ -262,7 +268,8 @@ ops = {'+': add, # tested
        'oct': octal,
        'dec': decimal,
        'ascii': ascii_mode,
-       'null': add_null}
+       'null': add_null,
+       'isnull': is_null}
 
  #functions which cannot appear in a variable name. (ex: testsize will be a variable, but test+ will beak into test and +).
 inline_break = {'+': add,

@@ -612,13 +612,20 @@ class Interpreter(object):
 				self.message("String Mode")
 				return
 
-			if '#' in input_string:
+			elif '#' in input_string:
 				self.parse( input_string.split('#')[0])
 				return
 
-			if ' ' in input_string:
-				for subparse in input_string.split(' '):
-					self.parse(subparse)
+			elif ' ' in input_string:
+				if '"' in input_string:
+					nostring, string_data = input_string.split('"', 1)
+					self.parse(nostring)
+					self.in_string = True
+					self.push(NULL())
+					self.parse(string_data)
+				else:
+					for subparse in input_string.split(' '):
+						self.parse(subparse)
 				return
 			else:
 				# handle the flow control items

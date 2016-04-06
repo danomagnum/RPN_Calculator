@@ -89,7 +89,11 @@ def parse(input_string):
 	if input_string[0] == ':': # interface commands start with a colon
 		input_string = input_string[1:]
 		text = input_string.split()
-		if text[0] == 'import':
+		if text[0] == 'step':
+			interp.step()
+		if text[0] == 'run':
+			interp.resume()
+		elif text[0] == 'import':
 			import_file(os.path.join(functions_directory, text[1]))
 
 		elif text[0] == 'export':
@@ -249,9 +253,11 @@ while loop:
 				interp.message(str(event))
 
 		if mode == STACK:
-			stack = interp.stack[:]
+			stack = interp.get_stack()
 			if interp.function_stack is not None:
 				stack += ['['] + interp.function_stack 
+			if interp.paused:
+				stack += ['@'] + interp.get_broken_commands()
 			max_stack = min(len(stack), YMAX-5)
 			if max_stack >= 0:
 				for row in range(1,max_stack + 1):

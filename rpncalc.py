@@ -440,6 +440,10 @@ class Interpreter(object):
 
 		self.in_string = False
 
+		self.paused = False
+		self.broken_commands = []
+		self.broken_child = None
+
 	def __str__(self):
 		stackstring = ''
 		for x in self.stack:
@@ -519,19 +523,22 @@ class Interpreter(object):
 			self.function_stack.append(']')
 	
 	def absorb_child(self, child):
-		for item in child.stack:
-			if hasattr(item, 'name'):
-				if item.name not in self.variables.keys() or item.name[0] == '$':
-					# was a local variable
-					if type(item) is Variable:
-						item = Value(item.val, item.comment)
-						pass
-					elif type(item) is Function:
-						item.name = None # make it a lambda
+		if child.paused:
+			self.paused = True
+			self.broken_child = child
+		else:
+			for item in child.stack:
+				if hasattr(item, 'name'):
+					if item.name not in self.variables.keys() or item.name[0] == '$':
+						# was a local variable
+						if type(item) is Variable:
+							item = Value(item.val, item.comment)
+							pass
+						elif type(item) is Function:
+							item.name = None # make it a lambda
 
-			self.push(item)
+				self.push(item)
 		self.messages += child.messages
-
 
 	def call(self, function):
 		i = Interpreter(self.builtin_functions,self.inline_break_list,parent=self)
@@ -544,8 +551,40 @@ class Interpreter(object):
 			raise e
 
 		self.absorb_child(i)
-	
-	def parse(self, input_string, root = False):
+
+	def step(self):
+		if self.broken_child is None:
+			if len(self.broken_commands):
+				command = self.broken_commands[0]
+				self.parse(command, step=True)
+				self.broken_commands = self.broken_commands[1:]
+		else:
+			self.broken_child.step()
+
+	def resume(self):
+		if self.broken_child is not None:
+			self.broken_child.resume()
+			self.absorb_child(self.broken_child)
+			self.broken_child = None
+
+		self.paused = False
+		for command in self.broken_commands:
+			self.parse(command)
+		self.broken_commands = []
+
+	def get_stack(self):
+		stack = self.stack[:]
+		if self.broken_child is not None:
+			stack += self.broken_child.get_stack()
+		return stack
+	def get_broken_commands(self):
+		commands = []
+		if self.broken_child is not None:
+			commands += self.broken_child.get_broken_commands()
+		commands += self.broken_commands
+		return commands
+			
+	def parse(self, input_string, root = False, step = False):
 		if input_string == '':
 			return
 
@@ -555,6 +594,11 @@ class Interpreter(object):
 
 		try:
 			# first split the input up into multiple components if there are any and parse them in order
+
+			if self.paused:
+				if not step:
+					self.broken_commands.append(input_string)
+					return
 
 			if self.in_string:
 				for pos in xrange(len(input_string)):
@@ -604,6 +648,10 @@ class Interpreter(object):
 						self.parse(input_string[1:])
 
 					self.message("String Mode")
+					return
+				elif input_string == '@':
+					self.message("Break!")
+					self.paused = True
 					return
 
 

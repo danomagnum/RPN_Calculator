@@ -52,6 +52,11 @@ def assign(interp, var, val):
 		
 def remove(interp, a):
 	return None
+		
+def removes(interp, count):
+	interp.message('Dropping ' + str(count.val) )
+	interp.pop(count.val)
+
 def show_vars(interp):
 	for value in interp.variables.itervalues():
 		interp.message(str(value))
@@ -62,7 +67,6 @@ def comment(interp, a, b):
 		return [b]
 	else:
 		raise CantAssign('Cannot create comment')
-
 
 def equal(interp, a, b):
 	if a.val == b.val:
@@ -248,6 +252,7 @@ ops = {'+': add, # tested
        '=': assign,
        '`': remove,
        'drop': remove,
+       'drops': removes,
        '?': show_vars,
        '\'': comment,
        '==': equal, # tested
@@ -442,7 +447,7 @@ class Interpreter(object):
 
 		self.paused = False
 		self.broken_commands = []
-		self.broken_child = None
+		self.child = None
 
 	def __str__(self):
 		stackstring = ''
@@ -452,7 +457,10 @@ class Interpreter(object):
 	def message(self, text):
 		self.messages.append(text)
 	def push(self, value):
-		self.stack.append(value)
+		if self.function_stack is not None:
+			self.function_stack.append(value)
+		else:
+			self.stack.append(value)
 	def pop(self, count = 1):
 		vals = []
 
@@ -525,7 +533,7 @@ class Interpreter(object):
 	def absorb_child(self, child):
 		if child.paused:
 			self.paused = True
-			self.broken_child = child
+			self.child = child
 		else:
 			for item in child.stack:
 				if hasattr(item, 'name'):
@@ -553,19 +561,19 @@ class Interpreter(object):
 		self.absorb_child(i)
 
 	def step(self):
-		if self.broken_child is None:
+		if self.child is None:
 			if len(self.broken_commands):
 				command = self.broken_commands[0]
 				self.parse(command, step=True)
 				self.broken_commands = self.broken_commands[1:]
 		else:
-			self.broken_child.step()
+			self.child.step()
 
 	def resume(self):
-		if self.broken_child is not None:
-			self.broken_child.resume()
-			self.absorb_child(self.broken_child)
-			self.broken_child = None
+		if self.child is not None:
+			self.child.resume()
+			self.absorb_child(self.child)
+			self.child = None
 
 		self.paused = False
 		for command in self.broken_commands:
@@ -574,155 +582,161 @@ class Interpreter(object):
 
 	def get_stack(self):
 		stack = self.stack[:]
-		if self.broken_child is not None:
-			stack += self.broken_child.get_stack()
+		if self.child is not None:
+			stack += self.child.get_stack()
 		return stack
 	def get_broken_commands(self):
 		commands = []
-		if self.broken_child is not None:
-			commands += self.broken_child.get_broken_commands()
+		if self.child is not None:
+			commands += self.child.get_broken_commands()
 		commands += self.broken_commands
 		return commands
 			
 	def parse(self, input_string, root = False, step = False):
-		if input_string == '':
-			return
+		if self.child:
+			self.child.parse(input_string, step=step)
+		else:
+			if input_string == '':
+				return
 
-		if root:
-			self.backup()
-			self.messages = []
+			if root:
+				self.backup()
+				self.messages = []
 
-		try:
-			# first split the input up into multiple components if there are any and parse them in order
+			try:
+				# first split the input up into multiple components if there are any and parse them in order
 
-			if self.paused:
-				if not step:
-					self.broken_commands.append(input_string)
-					return
-
-			if self.in_string:
-				for pos in xrange(len(input_string)):
-					if input_string[pos] == '"':
-						self.in_string = False
-						self.parse(input_string[(pos + 1):])
+				if self.paused:
+					if not step:
+						self.broken_commands.append(input_string)
 						return
-					val = Value(ord(input_string[pos]))
-					val.mode = DISPLAY_ASCII
-					self.push(val)
-				self.message("String Mode")
-				return
 
-			elif '#' in input_string:
-				self.parse( input_string.split('#')[0])
-				return
-
-			elif ' ' in input_string:
-				if '"' in input_string:
-					nostring, string_data = input_string.split('"', 1)
-					self.parse(nostring)
-					self.in_string = True
-					self.push(NULL())
-					self.parse(string_data)
-				else:
-					for subparse in input_string.split(' '):
-						self.parse(subparse)
-				return
-			else:
-				# handle the flow control items
-				for symbol in ('[', ']'):
-					if symbol in input_string:
-						if symbol == '[':
-							self.function_start()
-						elif symbol == ']':
-							self.function_end()
+				if self.in_string:
+					for pos in xrange(len(input_string)):
+						if input_string[pos] == '"':
+							self.in_string = False
+							if self.function_stack is not None:
+								self.function_stack.append('"')
+							self.parse(input_string[(pos + 1):])
+							return
+						if self.function_stack is None:
+							val = Value(ord(input_string[pos]))
+							val.mode = DISPLAY_ASCII
+							self.push(val)
 						else:
-							components = input_string.split(symbol)
-							if components[-1] == '':
-								components = components[:-1]
-							for subparse in components:
-								if subparse != '':
-									self.parse(subparse)
-								self.parse(symbol)
-						return
-
-				if self.function_stack is not None:
-					self.function_stack.append(input_string)
-					return
-				elif input_string[0] == '"':
-					self.in_string = True
-					self.push(NULL())
-					if len(input_string) > 1:
-						self.parse(input_string[1:])
+							self.function_stack.append(input_string[pos])
 
 					self.message("String Mode")
 					return
-				elif input_string == '@':
-					self.message("Break!")
-					self.paused = True
+
+				elif '#' in input_string:
+					self.parse( input_string.split('#')[0])
 					return
 
-
-				# check if the input is just a value.
-				try:
-					if input_string[0] == "0":
-						val = int(input_string, 0)
-						self.push(Value(val))
+				elif ' ' in input_string:
+					if '"' in input_string:
+						nostring, string_data = input_string.split('"', 1)
+						self.parse(nostring)
+						if self.function_stack is not None:
+							self.function_stack.append('"')
+						self.in_string = True
+						self.parse(string_data)
 					else:
-						val = float(input_string)
-						if val.is_integer():
-							if '.' not in input_string:
-								val = int(val)
-
-						self.push(Value(val))
+						for subparse in input_string.split(' '):
+							self.parse(subparse)
 					return
-				except:
-					#the input is not just a value so lets see if it is a function
-					if input_string in self.operatorlist:
-						func = self.builtin_functions[input_string]
-						argcount = len(inspect.getargspec(func).args) - 1
-						args = [self] + self.pop(argcount)
-						result = func(*args)
-						if result is not None:
-							for val in result:
-								self.push(val)
-						return
-
-
-
-					else:
-						#the input string is not just a function shorthand.
-						#search through the string and see if there are any functions here.
-						for funcname in self.inline_break_list:
-							if funcname in input_string:
-								components = input_string.split(funcname)
+				else:
+					# handle the flow control items
+					for symbol in ('[', ']'):
+						if symbol in input_string:
+							if symbol == '[':
+								self.function_start()
+							elif symbol == ']':
+								self.function_end()
+							else:
+								components = input_string.split(symbol)
 								if components[-1] == '':
 									components = components[:-1]
 								for subparse in components:
 									if subparse != '':
 										self.parse(subparse)
-									self.parse(funcname)
-								return
-						#must be a variable
-						if input_string[0] not in '0123456789.':
-							self.push(self.get_var(input_string))
+									self.parse(symbol)
+							return
 
-		except (NotEnoughOperands, CantAssign, CantCloseBlock, CantExecute, TypeError, AttributeError) as e:
-			if root:
-				self.message('Stack Unchanged - ' + (e.message))
-				self.restore()
-				return
-			else:
-				raise
-		except WhileBreak as e:
-			raise e
+					if self.function_stack is not None:
+						self.function_stack.append(input_string)
+						return
+					elif input_string[0] == '"':
+						self.in_string = True
+						if len(input_string) > 1:
+							self.parse(input_string[1:])
 
-		except Exception as e:
-			if root:
-				self.message(str(e.message) + ' - Stack Unchanged')
-				self.restore()
+						self.message("String Mode")
+						return
+					elif input_string == '@':
+						self.message("Break!")
+						self.paused = True
+						return
+
+
+					# check if the input is just a value.
+					try:
+						if input_string[0] == "0":
+							val = int(input_string, 0)
+							self.push(Value(val))
+						else:
+							val = float(input_string)
+							if val.is_integer():
+								if '.' not in input_string:
+									val = int(val)
+
+							self.push(Value(val))
+						return
+					except:
+						#the input is not just a value so lets see if it is a function
+						if input_string in self.operatorlist:
+							func = self.builtin_functions[input_string]
+							argcount = len(inspect.getargspec(func).args) - 1
+							args = [self] + self.pop(argcount)
+							result = func(*args)
+							if result is not None:
+								for val in result:
+									self.push(val)
+							return
+						else:
+							#the input string is not just a function shorthand.
+							#search through the string and see if there are any functions here.
+							for funcname in self.inline_break_list:
+								if funcname in input_string:
+									components = input_string.split(funcname)
+									if components[-1] == '':
+										components = components[:-1]
+									for subparse in components:
+										if subparse != '':
+											self.parse(subparse)
+										self.parse(funcname)
+									return
+							#must be a variable
+							if input_string[0] not in '0123456789.':
+								self.push(self.get_var(input_string))
+
+			except (NotEnoughOperands, CantAssign, CantCloseBlock, CantExecute, TypeError, AttributeError) as e:
+				if root:
+					self.message('Stack Unchanged - ' + (e.message))
+					self.restore()
+					return
+				else:
+					raise
+			except WhileBreak as e:
+				raise e
+
+			except Exception as e:
+				if root:
+					self.message(str(e.message) + ' - Stack Unchanged')
+					self.restore()
+					raise
+					return
 				raise
-				return
-			raise
 
 
 	def new_var(self, name):

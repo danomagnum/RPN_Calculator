@@ -1,200 +1,200 @@
+:q
+:quit
+"hello world"
 clear
 !
-"abcd"
-"test"
-"test"
-null
-isnull
-null
-isnull
-isnull
-isnull
-null
-isnull
-null
-null
-==
-3
-==
-2
-==
-0
-==
+1 2 3 4
+size
+size 1 >
+size 1 ><
+size 1 <
+drop
+drop
+drop
+clear
+!
+ds
+clear
+!
 1
-2
-@
-3
-4
-5
+size 1 <
+size 1 <
+:import test
+!
+:run
+:run
+:step
+:step
+:step
+:step
+:step
+:step
+:step
+:step
+:step
+:import test
+!
 :step
 :step
 :run
+:run
+:run
+2
+:import test
+!
+`
+`
+`
+looop
+!
+2
+`
+`
+`
+`
+`
 1
-```
+:import test
+!
+2
+`
+`
+:import test
+`
+`
+`
+`
+`
+`
+`
+`
+`
+`
+`
 `
 3
 4
-5
-@
-6
-7
-8
-:run
-@
-:step
-9
-10
-11
-:step
-:step
-:step
-:step
-:step
-:step
-:step
-:run
-1
-2
-3
-@
-4
-5
-6
-:step
-:step
-:step
-1
-2
-3
-@
-4
-5
-6
-:step
-:run
-[ 7 8 @ 9 10 11 12 13 ]
+check
 !
-:step
-[ 7 8 @ 9 10 11 12 13 ]
+`
+:import test
+`
+3
+check
 !
-:step
-:step
+`
+2
+check
+!
+`
+:import test
 clear
 !
-[ 7 8 @ 9 10 11 12 13 ]
+[ "abcd" ]
 !
-1
-2
+:import test
+`
 3
-[ 7 8 @ 9 10 11 12 13 ]
+check
 !
-:step
-:step
-1
-2
-@
-3
-4
-5
-:run
-[ 7 8 @ 9 10 11 12 13 ]
 !
-:run
-3
-:step
-:run
-12
-[ 7 8 @ 9 10 11 12 13 ]
+`
+`
+!
 !
 :step
-:step
 :run
-1
-2
-[ 7 8 @ 9 10 11 12 13 ]
+3
+`
+`
+`
+5 check
 !
-:step
-:step
-:run
-1
-2
-@
-3
-4
-5
-:run
-1
-2
-3
-4
-5
-[ 6 @ + 9 + -  1
+[ "hello" ]
+!
+:q
+[ "hello" ]
+!
+[ [ 3 ] ]
+!
+!
+`
+!
+[ "hello" ]
+!
+"hello"
+````
+`
+[ "hello" ]
+!
+string
+`
+:string
+`
+`
+`
+`
+`
+[
+"hello"
 ]
 !
-:step
-:step
-:step
-:step
-:step
-:run
-:wq
-[ 7 8 @ 9 10 11 12 13 ]
+[
+"world"]
+test =
 !
-:step
-:run
-[ 7 8 @ 9 10 11 12 13 ]
+[
+"workd"
+]
+test =
 !
-:step
-:step
-:run
-1
-2
-@
-3
-4
-:run
-1
-2
-3
-4
-5
-5
+test
 !
 clear
 !
-1
-2
-3
-`
-`
-1
-2
-3
-`
-`
+[ "hello " ]
+!
+clear
+!
+:import test
+8 drops
+:import test
+8 drops
+8
+drops
+:import test
+8 drops
+8
+drops
+drops
+drops
 1
 2
 3
 4
-[ 5 6 @ 7 8 ]
-!
-clear !
-"hello world"
-" "
-`
-`
-"hello world"
-"hello world"
-" "
+drops
+1
+drops
+1 2 3 4 5 2
+drops
 clear
 !
-"
-hello world
-"
-"  "
+:import test
+8 drops
 `
-"hello world"
-1 2 "hello world"
-"concatinating a string"
-22 roll
-drop
+`
+!
+!
+fib
+`
+
+3
+2
+add2
+`
+2
+3
+4
+add
+`
+`

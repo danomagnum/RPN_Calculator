@@ -149,6 +149,15 @@ class SubroutineTest(unittest.TestCase):
 		self.interp.parse(function)
 		self.assertEqual(self.interp.stack[-1], rpncalc.Value(5))
 
+	def test_strings(self):
+		function = '[ "hello world" ] !'
+		self.interp.parse(function)
+		result = []
+		for x in self.interp.stack:
+			result.append(chr(x.val))
+		result = ''.join(result)
+		self.assertEqual(result, 'hello world')
+
 	def test_nested(self):
 		function = '[ [ 2 3  + ] ! 7 + ] !'
 		self.interp.parse(function)
@@ -203,6 +212,18 @@ class SubroutineTest(unittest.TestCase):
 		self.interp.parse(function)
 		self.assertEqual(self.interp.stack, result2)
 
+class StringsTest(unittest.TestCase):
+	def setUp(self):
+		self.interp = rpncalc.Interpreter(rpncalc.ops, rpncalc.inline_break)
+	
+	def test_1(self):
+		function = '"hello world"'
+		self.interp.parse(function)
+		result = []
+		for x in self.interp.stack:
+			result.append(chr(x.val))
+		result = ''.join(result)
+		self.assertEqual(result, 'hello world')
 
 def example_operation_noparams(interp):
 	return []
@@ -277,7 +298,6 @@ class Bulk(unittest.TestCase):
 		self.interp.parse('5 1 2 + 4 * + 3 -')
 		result = 14
 		self.assertEqual(self.interp.stack, [rpncalc.Value(result)])
-
 
 
 bulk_tests = [('5 1 2 + 4 * + 3 -', 14),

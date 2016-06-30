@@ -121,6 +121,7 @@ def condition_ifelse(interp, func_false, func_true, condition):
 			return [ func_false ]
 
 def condition_while(interp, func):
+#TODO: need to make the while loop work with code execution break / pause
 	interp.loop_count += 1
 
 	if type(func) is not Function:
@@ -566,6 +567,12 @@ class Interpreter(object):
 				command = self.broken_commands[0]
 				self.parse(command, step=True)
 				self.broken_commands = self.broken_commands[1:]
+			else:
+				if self.parent is not None:
+					self.parent.absorb_child(self)
+					self.parent.broken_child = None
+					self.parent.message('done with child')
+					return
 		else:
 			self.child.step()
 
@@ -578,7 +585,8 @@ class Interpreter(object):
 		self.paused = False
 		for command in self.broken_commands:
 			self.parse(command)
-		self.broken_commands = []
+		if self.paused == False:
+			self.broken_commands = []
 
 	def get_stack(self):
 		stack = self.stack[:]

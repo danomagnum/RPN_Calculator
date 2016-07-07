@@ -1,4 +1,3 @@
-
 import kivy
 kivy.require('1.2.0')
 from kivy.app import App
@@ -11,10 +10,16 @@ from kivy.factory import Factory
 from kivy.config import ConfigParser
 from kivy.uix.settings import Settings
 
+from kivy.core.window import Window
+Window.size = (640, 1163)
+
+import os
+import pkgutil
+import sys
+
 import rpncalc
 import settings
 
-interp = rpncalc.Interpreter(rpncalc.ops, {})
 
 def parse(input_string):
 	global mode
@@ -71,22 +76,55 @@ def parse(input_string):
 	else:
 		interp.parse(input_string, True)
 
+
+
+##########
+
+
+interp = rpncalc.Interpreter(rpncalc.ops, {})
+
+
+def import_file(filename):
+	f = open(filename)
+	commands = f.read()
+	f.close()
+	for command in commands.split('\n'):
+		if len(command) > 0:
+			if command[0] == "#":
+				continue
+			parse(command)
+
+
+if settings.auto_import_functions:
+	for dirpath, dirnames, filenames in os.walk(settings.auto_functions_directory):
+		for filename in filenames:
+			import_file(os.path.join(settings.auto_functions_directory, filename))
+
+
+
+##########
 class Calculator(Widget):
 	entryline = ObjectProperty(None)
 	lastOp = ""
-	memorynum = ''
 	operation = False
 	stackdisplay = []
 
 	def _execute(self, op):
-		if op in '1234567890.':
-			self.memorynum += op
-			self.entryline.value.text = self.memorynum
+		if op in ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '.', '00', '[', 'space']:
+			if op in ['[',]:
+				op = ' ' + op + ' '
+			if op in ['space', ]:
+				op = ' '
+			self.entryline.text = self.entryline.text + op
+			if interp.messages:
+				self.messageline.value.text = interp.messages[-1]
+			else:
+				self.messageline.value.text = ''
 			return
 		else:
-			if self.memorynum:
-				parse(self.memorynum)
-				self.memorynum = ''
+			if self.entryline.text:
+				parse(self.entryline.text)
+				self.entryline.text = ''
 
 		if op not in ['enter', 'step', 'resume']:
 			parse(op)
@@ -95,7 +133,6 @@ class Calculator(Widget):
 				interp.step()
 			elif op == 'resume':
 				interp.run()
-		self.entryline.value.text = self.memorynum
 
 		stack_size = len(interp.stack)
 		for x in xrange(len(self.stackdisplay)):
@@ -103,16 +140,10 @@ class Calculator(Widget):
 				self.stackdisplay[x].value.text = str(interp.stack[-(x + 1)])
 			else:
 				self.stackdisplay[x].value.text = ''
-
-
-	def _setText(self, op):
-		if op == "." and "." in self.entryline.value.text:
-			return
-		if self.operation:
-			self.entryline.value.text = op
-			self.operation = False
+		if interp.messages:
+			self.messageline.value.text = interp.messages[-1]
 		else:
-			self.entryline.value.text += op
+			self.messageline.value.text = ''
 
 	def setup_stack_display(self, count):
 		pass
@@ -126,6 +157,13 @@ class CalcApp(App):
 		self.Calc.stackdisplay.append(self.Calc.stackline1)
 		self.Calc.stackdisplay.append(self.Calc.stackline2)
 		self.Calc.stackdisplay.append(self.Calc.stackline3)
+		self.Calc.stackdisplay.append(self.Calc.stackline4)
+		self.Calc.stackdisplay.append(self.Calc.stackline5)
+		self.Calc.stackdisplay.append(self.Calc.stackline6)
+		self.Calc.stackdisplay.append(self.Calc.stackline7)
+		self.Calc.stackdisplay.append(self.Calc.stackline8)
+		self.Calc.messageline.number.text = "Msg: "
+		self.Calc.messageline.number.width = '40sp'
 
 		for x in range(len(self.Calc.stackdisplay)):
 			self.Calc.stackdisplay[x].number.text = str(x)
@@ -145,6 +183,7 @@ class CalcApp(App):
 			'TIB' : 'default',
 			'TIF' : 'default'
 			})
+
 	def on_config_change(self, config, section, key, value):
 		if config is self.config:
 			if key == "CC" and value == "On":

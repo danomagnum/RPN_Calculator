@@ -11,48 +11,6 @@
 :step
 :step
 :step
-3  [ dup 1 - 0 < [ dup 1 - fact ! * ] if ] fact =
-!
-[ "abcd" ]
-!
-:import test
-`
-3
-check
-!
-!
-`
-`
-!
-!
-:step
-:step
-:step
-:step
-:step
-:step
-:step
-:step
-:step
-:step
-:step
-:step
-:step
-:step
-:step
-:step
-:step
-:step
-:step
-:step
-:step
-:step
-:step
-:step
-:step
-:step
-:step
-:step
 :step
 :step
 :step
@@ -198,3 +156,45 @@ clear
 1 2 3
 [ "test" ]
 !
+1
+2
+3
+4
+clear
+!
+1. 9. /
+9 *
+hex
+`
+`
+0x48
+hex
+bin
+08
+09
+07
+06
+05
+09
+5
+2
+if
+1
+2
+if
+if
+1
+if
+4
+2
+if
+5
+2
+1
+if
+`
+5
+9
+0
+if
+`

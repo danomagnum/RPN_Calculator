@@ -385,5 +385,4 @@ if settings.history > 0:
 		historyfile.write(('%s\n' % historyitem.strip()))
 	historyfile.close()
 
-
 sys.exit(0)

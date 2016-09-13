@@ -4,6 +4,8 @@ import copy
 import sys
 sys.setrecursionlimit(10000)
 
+DEBUG = True
+
 log = []
 
 DISPLAY_BIN = 2
@@ -235,6 +237,17 @@ def is_null(interp, a):
 	else:
 		return [Value(0)]
 
+def concat(interp, item0, item1):
+	if type(item0) is not Function:
+		func = Function()
+		func.stack.insert(0, str(item0))
+		func.stack.insert(0, str(item1))
+	else:
+		func = item0
+		func.stack.insert(0, str(item1))
+
+	return [func]
+
  # default built in functions
 ops = {'+': add, # tested
        '-': sub, # tested
@@ -255,7 +268,7 @@ ops = {'+': add, # tested
        'drop': remove,
        'drops': removes,
        '?': show_vars,
-       '\'': comment,
+       '"': comment,
        '==': equal, # tested
        '>': greater, # tested
        '<': less, # tested
@@ -275,7 +288,8 @@ ops = {'+': add, # tested
        'dec': decimal,
        'ascii': ascii_mode,
        'null': add_null,
-       'isnull': is_null}
+       'isnull': is_null,
+       'cat': concat}
 
  #functions which cannot appear in a variable name. (ex: testsize will be a variable, but test+ will beak into test and +).
 inline_break = {'+': add,
@@ -315,7 +329,10 @@ class WhileBreak(Exception):
 class Function(object):
 	def __init__(self, name=None, stack = None, comment = ''):
 		self.name = name
-		self.stack = stack
+		if stack is None:
+			self.stack = []
+		else:
+			self.stack = stack
 		self.comment = comment
 	
 	def reassign(self, interp, val):
@@ -329,15 +346,20 @@ class Function(object):
 			return var
 		elif type(val) == Function:
 			self.stack = val.stack
-			interp.variables[self.name] = self
-			return self
+			interp.variables[self.name] = self 
+			return self 
 	def __str__(self):
-		
-		if self.name is None:
-			name = 'lambda'
-		else:
-			name = self.name
-		return '[' + name + ']'
+		name = ''
+		for x in self.stack:
+			name += str(x) + " "
+		name = '[' + name + ']'
+
+		if self.name is not None:
+			name += ' ' + self.name + ' = '
+
+		if self.comment:
+			name += ' ' + self.comment + '"'
+		return name
 
 class Variable(object):
 	def __init__(self, name, val=0, comment='', mode=DISPLAY_DEC) :
@@ -358,7 +380,7 @@ class Variable(object):
 			return f
 
 	def __str__(self) :
-		string = str(self.name) + ' = '
+		string = ''
 		if self.mode == DISPLAY_DEC:
 			string += str(self.val)
 		elif self.mode == DISPLAY_HEX:
@@ -369,8 +391,9 @@ class Variable(object):
 			string += str(bin(self.val))
 		elif self.mode == DISPLAY_ASCII:
 			string += str(repr(chr(self.val)))
+		string += ' ' + str(self.name) + ' = '
 		if self.comment:
-			string += '  (' + self.comment + ')'
+			string += ' ' + self.comment + '"'
 		return string
 	def __eq__(self, other):
 		return self.val == other.val
@@ -405,7 +428,7 @@ class Value(object):
 			string = str(repr(chr(self.val)))
 
 		if self.comment:
-			string += '  (' + self.comment + ')'
+			string += ' ' + self.comment + '"'
 		return string
 	def __eq__(self, other):
 		return self.val == other.val
@@ -621,10 +644,10 @@ class Interpreter(object):
 
 				if self.in_string:
 					for pos in xrange(len(input_string)):
-						if input_string[pos] == '"':
+						if input_string[pos] == "'":
 							self.in_string = False
 							if self.function_stack is not None:
-								self.function_stack.append('"')
+								self.function_stack.append("'")
 							self.parse(input_string[(pos + 1):])
 							return
 						if self.function_stack is None:
@@ -642,11 +665,11 @@ class Interpreter(object):
 					return
 
 				elif ' ' in input_string:
-					if '"' in input_string:
-						nostring, string_data = input_string.split('"', 1)
+					if "'" in input_string:
+						nostring, string_data = input_string.split("'", 1)
 						self.parse(nostring)
 						if self.function_stack is not None:
-							self.function_stack.append('"')
+							self.function_stack.append("'")
 						self.in_string = True
 						self.parse(string_data)
 					else:
@@ -674,7 +697,7 @@ class Interpreter(object):
 					if self.function_stack is not None:
 						self.function_stack.append(input_string)
 						return
-					elif input_string[0] == '"':
+					elif input_string[0] == "'":
 						self.in_string = True
 						if len(input_string) > 1:
 							self.parse(input_string[1:])
@@ -729,21 +752,25 @@ class Interpreter(object):
 								self.push(self.get_var(input_string))
 
 			except (NotEnoughOperands, CantAssign, CantCloseBlock, CantExecute, TypeError, AttributeError) as e:
-				if root:
-					self.message('Stack Unchanged - ' + (e.message))
-					self.restore()
-					return
-				else:
-					raise
+				if not DEBUG:
+					if root:
+						self.message('Stack Unchanged - ' + (e.message))
+						self.restore()
+						return
+					else:
+						raise
+				raise
 			except WhileBreak as e:
 				raise e
 
 			except Exception as e:
-				if root:
-					self.message(str(e.message) + ' - Stack Unchanged')
-					self.restore()
+				if not DEBUG:
+					if root:
+						self.message(str(e.message) + ' - Stack Unchanged')
+						self.restore()
+						raise
+						return
 					raise
-					return
 				raise
 
 
@@ -768,4 +795,4 @@ class Interpreter(object):
 		else:
 			return self.variables[name]
 
-		
+	

@@ -1,5 +1,6 @@
 import inspect
 import copy
+import decimal
 
 import sys
 sys.setrecursionlimit(10000)
@@ -36,6 +37,8 @@ def div(interp, b, a):
 	return [Value(a.val / b.val, comment)]
 def convert_int(interp, a):
 	return [Value(int(a.val))]
+def convert_dec(interp, a):
+	return [Value(decimal.Decimal(a.val))]
 def convert_float(interp, a):
 	return [Value(float(a.val))]
 def modulus(interp, b,a):
@@ -225,7 +228,7 @@ def octal(interp):
 		interp.stack[-1].mode = original
 		interp.message("Could not change display mode to octal for " + str(interp.stack[-1]))
 
-def decimal(interp):
+def set_decimal(interp):
 	interp.stack[-1].mode = DISPLAY_DEC
 
 def add_null(interp):
@@ -712,16 +715,8 @@ class Interpreter(object):
 
 					# check if the input is just a value.
 					try:
-						if input_string[0] == "0":
-							val = int(input_string, 0)
-							self.push(Value(val))
-						else:
-							val = float(input_string)
-							if val.is_integer():
-								if '.' not in input_string:
-									val = int(val)
-
-							self.push(Value(val))
+						val = decimal.Decimal(input_string)
+						self.push(Value(val))
 						return
 					except:
 						#the input is not just a value so lets see if it is a function

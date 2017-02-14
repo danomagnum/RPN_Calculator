@@ -1,5 +1,6 @@
 import unittest
 import rpncalc
+import decimal
 
 
 class BasicMath(unittest.TestCase):
@@ -28,7 +29,7 @@ class BasicMath(unittest.TestCase):
 
 	def test_div(self):
 		self.interp.parse('/')
-		result = self.x0 / self.x1
+		result = decimal.Decimal(self.x0) / decimal.Decimal(self.x1)
 		self.assertEqual(self.interp.stack, [rpncalc.Value(result)])
 
 	def test_mod(self):
@@ -150,7 +151,7 @@ class SubroutineTest(unittest.TestCase):
 		self.assertEqual(self.interp.stack[-1], rpncalc.Value(5))
 
 	def test_strings(self):
-		function = '[ "hello world" ] !'
+		function = "[ 'hello world' ] !"
 		self.interp.parse(function)
 		result = []
 		for x in self.interp.stack:
@@ -217,7 +218,7 @@ class StringsTest(unittest.TestCase):
 		self.interp = rpncalc.Interpreter(rpncalc.ops, rpncalc.inline_break)
 	
 	def test_1(self):
-		function = '"hello world"'
+		function = "'hello world'"
 		self.interp.parse(function)
 		result = []
 		for x in self.interp.stack:

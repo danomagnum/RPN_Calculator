@@ -27,9 +27,27 @@ def sub(interp, b, a):
 	return [Value(a.val - b.val, comment)]
 def mult(interp, b, a):
 	comment = ''
+	result = 0
 	if a.comment and b.comment:
 		comment = a.comment + '+' + b.comment
-	return [Value(a.val * b.val, comment)]
+
+	if type(a.val) is decimal.Decimal:
+		if type(b.val) is float:
+			result = a.val * decimal.Decimal(b.val)
+			interp.message("Mangling a float to a decimal")
+		else:
+			result = a.val * b.val
+			
+	elif type(b.val) is decimal.Decimal:
+		if type(a.val) is float:
+			result = decimal.Decimal(a.val) * b.val
+			interp.message("Mangling a float to a decimal")
+		else:
+			result = a.val * b.val
+	else:
+		result = a.val * b.val
+
+	return [Value(result)]
 def div(interp, b, a):
 	comment = ''
 	if a.comment and b.comment:

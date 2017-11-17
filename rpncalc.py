@@ -5,7 +5,7 @@ import decimal
 import sys
 sys.setrecursionlimit(10000)
 
-DEBUG = True
+DEBUG = False
 
 log = []
 
@@ -23,13 +23,13 @@ def add(interp, b, a):
 def sub(interp, b, a):
 	comment = ''
 	if a.comment and b.comment:
-		comment = a.comment + '+' + b.comment
+		comment = a.comment + '-' + b.comment
 	return [Value(a.val - b.val, comment)]
 def mult(interp, b, a):
 	comment = ''
 	result = 0
 	if a.comment and b.comment:
-		comment = a.comment + '+' + b.comment
+		comment = a.comment + '*' + b.comment
 
 	if type(a.val) is decimal.Decimal:
 		if type(b.val) is float:
@@ -51,7 +51,7 @@ def mult(interp, b, a):
 def div(interp, b, a):
 	comment = ''
 	if a.comment and b.comment:
-		comment = a.comment + '+' + b.comment
+		comment = a.comment + '/' + b.comment
 	return [Value(a.val / b.val, comment)]
 def convert_int(interp, a):
 	return [Value(int(a.val))]
@@ -62,7 +62,7 @@ def convert_float(interp, a):
 def modulus(interp, b,a):
 	comment = ''
 	if a.comment and b.comment:
-		comment = a.comment + '+' + b.comment
+		comment = a.comment + '%' + b.comment
 	return [Value(a.val % b.val, comment)]
 def swap(interp, a,b):
 	return (a, b)

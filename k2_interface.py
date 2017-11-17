@@ -148,7 +148,7 @@ class CalcApp(App):
 	def on_config_change(self, config, section, key, value):
 		if config is self.config:
 			if key == "CC" and value == "On":
-				print "fuck"
+				pass
 			else:
 				print section, key, value
 	def build_settings(self, settings):

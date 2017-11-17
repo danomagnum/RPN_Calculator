@@ -80,6 +80,24 @@ def removes(interp, count):
 	interp.message('Dropping ' + str(count.val) )
 	interp.pop(count.val)
 
+def group(interp, count):
+	newstack = []
+	for item in interp.pop(count.val):
+		newstack.append(str(item))
+	return [Function(stack=newstack[::-1])]
+
+def append(interp, func, item):
+	if not type(func) is Function:
+		raise FunctionRequired()
+	func.stack.append(str(item))
+	return [func]
+
+def prepend(interp, func, item):
+	if not type(func) is Function:
+		raise FunctionRequired()
+	func.stack.insert(0, str(item))
+	return [func]
+
 def show_vars(interp):
 	for value in interp.variables.itervalues():
 		interp.message(str(value))
@@ -288,6 +306,9 @@ ops = {'+': add, # tested
        '`': remove,
        'drop': remove,
        'drops': removes,
+       'group': group,
+       'append': append,
+       'prepend': prepend,
        '?': show_vars,
        '"': comment,
        '==': equal, # tested
@@ -330,7 +351,8 @@ inline_break = {'+': add,
                 '!': call,
                 '^': exponent}
 
-
+class FunctionRequired(Exception):
+	pass
 
 class NotEnoughOperands(Exception):
 	pass
@@ -373,7 +395,7 @@ class Function(object):
 		name = ''
 		for x in self.stack:
 			name += str(x) + " "
-		name = '[' + name + ']'
+		name = '[ ' + name + ']'
 
 		if self.name is not None:
 			name += ' ' + self.name + ' = '
@@ -764,7 +786,7 @@ class Interpreter(object):
 							if input_string[0] not in '0123456789.':
 								self.push(self.get_var(input_string))
 
-			except (NotEnoughOperands, CantAssign, CantCloseBlock, CantExecute, TypeError, AttributeError) as e:
+			except (NotEnoughOperands, CantAssign, CantCloseBlock, CantExecute, TypeError, AttributeError, decimal.DivisionByZero, FunctionRequired) as e:
 				if not DEBUG:
 					if root:
 						self.message('Stack Unchanged - ' + (e.message))

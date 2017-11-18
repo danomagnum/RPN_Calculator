@@ -86,6 +86,8 @@ def group(interp, count):
 		newstack.append(str(item))
 	return [Function(stack=newstack[::-1])]
 
+
+
 def append(interp, func, item):
 	if not type(func) is Function:
 		raise FunctionRequired()
@@ -277,13 +279,17 @@ def is_null(interp, a):
 		return [Value(0)]
 
 def concat(interp, item0, item1):
+
 	if type(item0) is not Function:
 		func = Function()
 		func.stack.insert(0, str(item0))
-		func.stack.insert(0, str(item1))
 	else:
 		func = item0
+
+	if type(item1) is not Function:
 		func.stack.insert(0, str(item1))
+	else:
+		func.stack = item1.stack + func.stack
 
 	return [func]
 

@@ -721,21 +721,41 @@ class Interpreter(object):
 					return
 				else:
 					# handle the flow control items
-					for symbol in ('[', ']'):
-						if symbol in input_string:
-							if symbol == '[':
-								self.function_start()
-							elif symbol == ']':
-								self.function_end()
-							else:
-								components = input_string.split(symbol)
-								if components[-1] == '':
-									components = components[:-1]
-								for subparse in components:
-									if subparse != '':
-										self.parse(subparse)
-									self.parse(symbol)
-							return
+				#	for symbol in ('[', ']'):
+				#		if symbol in input_string:
+				#			if symbol == '[':
+				#				self.function_start()
+				#			elif symbol == ']':
+				#				self.function_end()
+				#			else:
+				#				components = input_string.split(symbol)
+				#				if components[-1] == '':
+				#					components = components[:-1]
+				#				for subparse in components:
+				#					if subparse != '':
+				#						self.parse(subparse)
+				#					self.parse(symbol)
+				#			return
+
+
+					if '[' in input_string:
+						components = input_string.split('[')
+						for component in components[:-1]:
+							if component != '':
+								self.parse(component)
+							self.function_start()
+						if components[-1] != '':
+							self.parse(components[-1])
+						return
+					if ']' in input_string:
+						components = input_string.split(']')
+						for component in components[:-1]:
+							if component != '':
+								self.parse(component)
+							self.function_end()
+						if components[-1] != '':
+							self.parse(components[-1])
+						return
 
 					if self.function_stack is not None:
 						self.function_stack.append(input_string)

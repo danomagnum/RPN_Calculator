@@ -1,3 +1,4 @@
+from __future__ import print_function
 import rpncalc
 #import readline
 import sys
@@ -20,8 +21,8 @@ def load_all_modules_from_dir(dirname):
 			yield module
 
 
-for module in load_all_modules_from_dir('plugins'):
-	loaded_plugins.update(module.register())
+#for module in load_all_modules_from_dir('plugins'):
+	#loaded_plugins.update(module.register())
 
 function_list = rpncalc.ops.copy()
 function_list.update(loaded_plugins)
@@ -106,22 +107,25 @@ interp.message("Welcone To The Basic RPN Calculator Interface")
 
 while loop:
 	try:
-		print
+		print()
 		stack = interp.stack[-5:]
 		start = len(stack)
 
 		if start == 0:
-			print 'Empty'
+			print( 'Empty')
 
 		for row in stack:
-			print start, ') ', row
+			print( start, ') ', str(row.val))
 			start = start - 1
 
 		if interp.messages:
-			print interp.messages
+			print( interp.messages)
 
 
-		input_string = raw_input(">")
+		try: 
+			input_string = raw_input(">")
+		except NameError: 
+			input_string = input(">")
 		if len(input_string) > 0:
 			parse(input_string)
 		

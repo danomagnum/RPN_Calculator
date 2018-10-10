@@ -289,18 +289,19 @@ class Bulk(unittest.TestCase):
 
 	def check_inline(self, test, result):
 		self.interp.parse(test)
-		self.assertEqual(self.interp.stack, [rpn_types.Value(result)])
+		self.assertEqual(str(self.interp.stack[0]), str(rpn_types.Value(result)))
+		#self.assertEqual(self.interp.stack, [rpn_types.Value(result)])
 
 	def check_function(self, test, result):
 		self.interp.parse(test)
-		self.assertEqual(self.interp.stack, [rpn_types.Value(result)])
-
+		self.assertEqual(str(self.interp.stack[0]), str(rpn_types.Value(result)))
+		#self.assertEqual(self.interp.stack, [rpn_types.Value(result)])
 
 
 	def test_one(self):
-		self.interp.parse('5 1 2 + 4 * + 3 -')
-		result = 14
-		self.assertEqual(self.interp.stack, [rpn_types.Value(result)])
+		self.interp.parse(r'[1 2 3] \0 swap `')
+		result = 1
+		self.assertEqual(str(self.interp.stack[0]), str(rpn_types.Value(result)))
 
 
 bulk_tests = [('5 1 2 + 4 * + 3 -', 14),
@@ -310,7 +311,11 @@ bulk_tests = [('5 1 2 + 4 * + 3 -', 14),
 	      ('6 4 5 + * 25 2 3 + / -', 49),
 	      ('10 A = 20 B = + ', 30),
 	      ('10 A = 20 B = + drop A int', 10),
-	      ('10 A = 20 B = + drop B int', 20)]
+	      ('10 A = 20 B = + drop B int', 20),
+	      (r'[1 2 3] \0 swap `', 1),
+	      (r'[1 2 3] \1 swap `', 2),
+	      (r'[1 2 3] \2 swap `', 3),
+	      (r'[1 2 3] \3 swap `', 'NULL')]
 
 test_id = 0
 for test in bulk_tests:

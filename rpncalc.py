@@ -404,8 +404,11 @@ class Interpreter(object):
 										raise errors.NotEnoughOperands("Can't get subitem of an element that isn't there")
 									#self.push(item)
 									#self.message(str(item))
-									v = item.get_index(val)
-									self.parse(str(v))
+									try:
+										v = item.get_index(val)
+										self.parse(str(v))
+									except IndexError:
+										raise errors.OutOfBounds("Cannot access out of array bounds")
 									#self.message('parsing ' + str(v))
 									#self.push(rpn_types.Value(v))
 									return
@@ -415,7 +418,7 @@ class Interpreter(object):
 							elif input_string[0] not in '0123456789.':
 								self.push(self.get_var(input_string))
 
-			except (errors.NotEnoughOperands, errors.CantAssign, errors.CantCloseBlock, errors.CantExecute, TypeError, AttributeError, decimal.DivisionByZero, errors.FunctionRequired) as e:
+			except (errors.NotEnoughOperands, errors.CantAssign, errors.CantCloseBlock, errors.CantExecute, TypeError, AttributeError, decimal.DivisionByZero, errors.FunctionRequired, errors.OutOfBounds) as e:
 				if not DEBUG:
 					if root:
 						self.message('Stack Unchanged - ' + (e.message))

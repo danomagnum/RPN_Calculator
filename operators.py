@@ -269,10 +269,10 @@ def set_decimal(interp):
 	interp.stack[-1].mode = DISPLAY_DEC
 
 def add_null(interp):
-	interp.push(NULL())
+	interp.push(rpn_types.NULL())
 
 def is_null(interp, a):
-	if type(a) is NULL:
+	if type(a) is rpn_types.NULL:
 		return [rpn_types.Value(1)]
 	else:
 		return [rpn_types.Value(0)]

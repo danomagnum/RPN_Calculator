@@ -115,7 +115,7 @@ while loop:
 			print( 'Empty')
 
 		for row in stack:
-			print( start, ') ', str(row.val))
+			print( start, ') ', str(row))
 			start = start - 1
 
 		if interp.messages:

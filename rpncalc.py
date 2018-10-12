@@ -188,6 +188,8 @@ class Interpreter(object):
 		self.function_depth -= 1
 
 		f = rpn_types.Function(stack = self.function_stack[self.function_depth])
+
+		self.message('closing function ' + str(f))
 		
 		if self.function_depth == 0:
 			#finish recording function
@@ -195,6 +197,7 @@ class Interpreter(object):
 			self.push(f)
 		else:
 			self.function_stack[self.function_depth - 1].append(f)
+			self.function_stack.pop()
 	
 	def absorb_child(self, child):
 		if child.paused:

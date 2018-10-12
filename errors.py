@@ -17,3 +17,5 @@ class CantExecute(Exception):
 class WhileBreak(Exception):
 	pass
 
+class OutOfBounds(Exception):
+	pass

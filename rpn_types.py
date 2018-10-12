@@ -1,3 +1,4 @@
+import errors
 
 DISPLAY_BIN = 2
 DISPLAY_DEC = 10
@@ -50,8 +51,10 @@ class Function(object):
 	def get_index(self, index):
 		if index < len(self.stack):
 			return self.stack[index]
+		elif (-1 * index) <= len(self.stack):
+			return self.stack[index]
 		else:
-			return NULL()
+			raise errors.OutOfBounds("Cannot acess data outside of bounds")
 	
 	def pop(self, count = 1):
 		return self.stack.pop()
@@ -153,6 +156,6 @@ class Value(object):
 		if index == 0:
 			return self
 		else:
-			return NULL()
+			raise errors.OutOfBounds("Cannot acess past '0' on scalar")
 
 

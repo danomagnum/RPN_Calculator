@@ -189,7 +189,7 @@ class Interpreter(object):
 
 		f = rpn_types.Function(stack = self.function_stack[self.function_depth])
 
-		self.message('closing function ' + str(f))
+		#self.message('closing function ' + str(f))
 		
 		if self.function_depth == 0:
 			#finish recording function

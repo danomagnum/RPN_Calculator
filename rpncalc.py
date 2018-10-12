@@ -55,7 +55,7 @@ ops = {'+': operators.add, # tested
        'oct': operators.octal,
        'dec': operators.decimal,
        'ascii': operators.ascii_mode,
-       'null': operators.add_null,
+       'NULL': operators.add_null,
        'isnull': operators.is_null,
        'cat': operators.concat}
 
@@ -123,8 +123,8 @@ class Interpreter(object):
 	def message(self, text):
 		self.messages.append(text)
 	def push(self, value):
-		if self.function_stack is not None:
-			self.function_stack.append(value)
+		if self.function_depth > 0:
+			self.function_stack[self.function_depth - 1].append(value)
 		else:
 			self.stack.append(value)
 	def pop(self, count = 1):
@@ -177,24 +177,24 @@ class Interpreter(object):
 
 
 	def function_start(self):
-		if self.function_stack is None:
-			#start recording function
-			self.function_stack = []
+		if self.function_depth == 0:
+			self.function_stack = [[]]
 		else:
-			self.function_stack.append('[')
+			self.function_stack.append([])
 
 		self.function_depth += 1
 
 	def function_end(self):
 		self.function_depth -= 1
+
+		f = rpn_types.Function(stack = self.function_stack[self.function_depth])
 		
 		if self.function_depth == 0:
 			#finish recording function
-			f = rpn_types.Function(stack = self.function_stack)
 			self.function_stack = None
 			self.push(f)
 		else:
-			self.function_stack.append(']')
+			self.function_stack[self.function_depth - 1].append(f)
 	
 	def absorb_child(self, child):
 		if child.paused:
@@ -219,7 +219,7 @@ class Interpreter(object):
 		i.loop_count = self.loop_count
 		try:
 			for x in function.stack:
-				i.parse(x)
+				i.parse(str(x))
 		except errors.WhileBreak as e:
 			self.absorb_child(i)
 			raise e
@@ -288,16 +288,16 @@ class Interpreter(object):
 					for pos in xrange(len(input_string)):
 						if input_string[pos] == "'":
 							self.in_string = False
-							if self.function_stack is not None:
-								self.function_stack.append("'")
+							if self.function_depth > 0:
+								self.function_stack[self.function_depth - 1].append("'")
 							self.parse(input_string[(pos + 1):])
 							return
-						if self.function_stack is None:
+						if self.function_depth == 0:
 							val = rpn_types.Value(ord(input_string[pos]))
 							val.mode = rpn_types.DISPLAY_ASCII
 							self.push(val)
 						else:
-							self.function_stack.append(input_string[pos])
+							self.function_stack[self.function_depth - 1].append(input_string[pos])
 
 					self.message("String Mode")
 					return
@@ -310,8 +310,8 @@ class Interpreter(object):
 					if "'" in input_string:
 						nostring, string_data = input_string.split("'", 1)
 						self.parse(nostring)
-						if self.function_stack is not None:
-							self.function_stack.append("'")
+						if self.function_depth > 0:
+							self.function_stack[self.function_depth - 1].append("'")
 						self.in_string = True
 						self.parse(string_data)
 					else:
@@ -339,8 +339,8 @@ class Interpreter(object):
 							self.parse(components[-1])
 						return
 
-					if self.function_stack is not None:
-						self.function_stack.append(input_string)
+					if self.function_depth > 0:
+						self.function_stack[self.function_depth - 1].append(input_string)
 						return
 					elif input_string[0] == "'":
 						self.in_string = True
@@ -399,7 +399,9 @@ class Interpreter(object):
 										raise errors.NotEnoughOperands("Can't get subitem of an element that isn't there")
 									#self.push(item)
 									v = item.get_index(val)
-									self.push(rpn_types.Value(v))
+									self.parse(str(v))
+									self.message('parsing ' + str(v))
+									#self.push(rpn_types.Value(v))
 									return
 								except:
 									raise

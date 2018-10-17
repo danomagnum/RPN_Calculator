@@ -295,5 +295,6 @@ def concat(interp, item0, item1):
 
 def halt_catch_fire(interp):
 	interp.debug = True
-	interp.message("Catching Fire on " + str(interp.last_fault))
-	raise interp.last_fault
+	if interp.last_fault is not None:
+		interp.message("Catching Fire on " + str(interp.last_fault))
+		raise interp.last_fault

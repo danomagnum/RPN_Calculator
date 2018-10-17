@@ -1,0 +1,5 @@
+65 ascii
+65 dup ascii ascii
+ascii
+swap
+ascii

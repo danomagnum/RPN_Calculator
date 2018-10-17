@@ -1,6 +1,7 @@
 import decimal
 import rpn_types
 import errors
+import copy
 
 def add(interp, b, a):
 	comment = ''
@@ -188,7 +189,8 @@ def condition_while_break(interp):
 
 
 def duplicate(interp, a):
-	return [a, a]
+	new_a = copy.deepcopy(a)
+	return [a, new_a]
 
 def rotate(interp, a, b, c):
 	return [ b, a, c ]

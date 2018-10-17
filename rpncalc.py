@@ -58,7 +58,8 @@ ops = {'+': operators.add, # tested
        'ascii': operators.ascii_mode,
        'NULL': operators.add_null,
        'isnull': operators.is_null,
-       'cat': operators.concat}
+       'cat': operators.concat,
+       'hcf': operators.halt_catch_fire}
 
  #functions which cannot appear in a variable name. (ex: testsize will be a variable, but test+ will beak into test and +).
 inline_break = {'+': operators.add,
@@ -115,6 +116,9 @@ class Interpreter(object):
 		self.paused = False
 		self.broken_commands = []
 		self.child = None
+
+		self.debug = DEBUG
+		self.last_fault = None
 
 	def __str__(self):
 		stackstring = ''
@@ -289,6 +293,7 @@ class Interpreter(object):
 						return
 
 				if self.in_string:
+					#TODO: make strings their own type or at least better integrate them into lists
 					for pos in xrange(len(input_string)):
 						if input_string[pos] == "'":
 							self.in_string = False
@@ -419,7 +424,8 @@ class Interpreter(object):
 								self.push(self.get_var(input_string))
 
 			except (errors.NotEnoughOperands, errors.CantAssign, errors.CantCloseBlock, errors.CantExecute, TypeError, AttributeError, decimal.DivisionByZero, errors.FunctionRequired, errors.OutOfBounds) as e:
-				if not DEBUG:
+				self.last_fault = e
+				if not self.debug:
 					if root:
 						self.message('Stack Unchanged - ' + (e.message))
 						self.restore()
@@ -431,7 +437,7 @@ class Interpreter(object):
 				raise e
 
 			except Exception as e:
-				if not DEBUG:
+				if not self.debug:
 					if root:
 						self.message(str(e.message) + ' - Stack Unchanged')
 						self.restore()

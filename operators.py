@@ -232,7 +232,7 @@ def negate(interp, a):
 def binary(interp):
 	original = interp.stack[-1].mode
 	try:
-		interp.stack[-1].mode = DISPLAY_BIN
+		interp.stack[-1].mode = rpn_types.DISPLAY_BIN
 		str(interp.stack[-1])
 	except:
 		interp.stack[-1].mode = original
@@ -241,16 +241,17 @@ def binary(interp):
 def ascii_mode(interp):
 	original = interp.stack[-1].mode
 	try:
-		interp.stack[-1].mode = DISPLAY_ASCII
+		interp.stack[-1].mode = rpn_types.DISPLAY_ASCII
 		str(interp.stack[-1])
-	except:
+	except Exception as e:
+		raise e
 		interp.stack[-1].mode = original
 		interp.message("Could not change display mode to ascii for " + str(interp.stack[-1]))
 
 def hexadecimal(interp):
 	original = interp.stack[-1].mode
 	try:
-		interp.stack[-1].mode = DISPLAY_HEX
+		interp.stack[-1].mode = rpn_types.DISPLAY_HEX
 		str(interp.stack[-1])
 	except:
 		interp.stack[-1].mode = original
@@ -259,14 +260,14 @@ def hexadecimal(interp):
 def octal(interp):
 	original = interp.stack[-1].mode
 	try:
-		interp.stack[-1].mode = DISPLAY_OCT
+		interp.stack[-1].mode = rpn_types.DISPLAY_OCT
 		str(interp.stack[-1])
 	except:
 		interp.stack[-1].mode = original
 		interp.message("Could not change display mode to octal for " + str(interp.stack[-1]))
 
 def set_decimal(interp):
-	interp.stack[-1].mode = DISPLAY_DEC
+	interp.stack[-1].mode = rpn_types.DISPLAY_DEC
 
 def add_null(interp):
 	interp.push(rpn_types.NULL())
@@ -292,4 +293,7 @@ def concat(interp, item0, item1):
 
 	return [func]
 
-
+def halt_catch_fire(interp):
+	interp.debug = True
+	interp.message("Catching Fire on " + str(interp.last_fault))
+	raise interp.last_fault

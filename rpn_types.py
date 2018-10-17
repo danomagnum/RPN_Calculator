@@ -87,13 +87,13 @@ class Variable(object):
 		if self.mode == DISPLAY_DEC:
 			string += str(self.val)
 		elif self.mode == DISPLAY_HEX:
-			string += "Ox%X" % self.val
+			string += "Ox%X" % int(self.val)
 		elif self.mode == DISPLAY_OCT:
-			string += "0o%o" % self.val
+			string += "0o%o" % int(self.val)
 		elif self.mode == DISPLAY_BIN:
-			string += str(bin(self.val))
+			string += str(bin(int(self.val)))
 		elif self.mode == DISPLAY_ASCII:
-			string += str(repr(chr(self.val)))
+			string += str(repr(chr(int(self.val))))
 		string += ' ' + str(self.name) + ' = '
 		if self.comment:
 			string += ' ' + self.comment + '"'

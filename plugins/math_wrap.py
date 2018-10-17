@@ -5,15 +5,17 @@
 # created by copying the result of dir(math) out of a shell and trimming them.
 
 import rpncalc
+import rpn_types
 import math
+from decimal import Decimal
 
 def noparam_gen(constant):
-	return lambda interp: [rpncalc.Value(math.__dict__[constant])]
+	return lambda interp: [rpn_types.Value(Decimal(math.__dict__[constant]))]
 
 noparam = ['e', 'pi']
 
 def oneparam_gen(function):
-	return lambda interp, a : [rpncalc.Value(math.__dict__[function](a.val))]
+	return lambda interp, a : [rpn_types.Value(Decimal(math.__dict__[function](a.val)))]
 
 oneparam = ['acos',
             'acosh',
@@ -49,7 +51,7 @@ oneparam = ['acos',
             'trunc']
 
 def twoparam_gen(function):
-	return lambda interp, a, b : [rpncalc.Value(math.__dict__[function](a.val, b.val))]
+	return lambda interp, a, b : [rpn_types.Value(Decimal(math.__dict__[function](a.val, b.val)))]
 
 twoparam = ['copysign',
             'fmod',

@@ -1,9 +1,25 @@
-[ [ 1 ] a = 2 b = ]
-\a
-!!
-\a
+[ 1 2 3 ]
+reverse
+!
+[ 1 2 3 ]
+reverse !!
+[ 1 2 3 ] [ + ] foreach !
+[ 1 2 3 ]
+[ + ]
+foreach
 !
 `
-\b
+`
+`
+`
+`
+`
+`
+`
+[ 1 2 3 ]
+0 swap
+[ + ] foreach !
+1
+[ 1 2 4 ] [ * ] foreach !
 `
 `

@@ -432,7 +432,10 @@ class Interpreter(object):
 									#self.message('parsing ' + str(v))
 									#self.push(rpn_types.Value(v))
 									return
-								except:
+								except ValueError:
+
+									if len(input_string) == 1:
+										varname = str(self.pop()[0].val)
 									varname = input_string[1:]
 									if self.stacksize() > 0:
 										item = self.pop()[0]

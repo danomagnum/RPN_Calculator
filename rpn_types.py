@@ -55,6 +55,19 @@ class Function(object):
 			return self.stack[index]
 		else:
 			raise errors.OutOfBounds("Cannot acess data outside of bounds")
+
+	def get_var(self, varname):
+		for item in self.stack:
+			if isinstance(item, Variable):
+				if item.name == varname:
+					return item
+			elif isinstance(item, Function):
+				if item.name == varname:
+					return item
+
+		raise errors.VarNotFound("Variable " + varname + " was not found")
+	
+
 	
 	def pop(self, count = 1):
 		return self.stack.pop()

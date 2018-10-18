@@ -44,6 +44,7 @@ ops = {'+': operators.add, # tested
        '<=': operators.lequal, # tested
        'not': operators.negate, # tested
        '!': operators.call,
+       '!!': operators.call_as_list,
        'if': operators.condition_if,
        'ifelse': operators.condition_ifelse,
        'while': operators.condition_while,
@@ -234,6 +235,20 @@ class Interpreter(object):
 
 		self.absorb_child(i)
 
+	def call_as_list(self, function):
+		i = Interpreter(self.builtin_functions,self.inline_break_list,parent=self)
+		i.loop_count = self.loop_count
+		try:
+			for x in function.stack:
+				i.parse(str(x))
+		except errors.WhileBreak as e:
+			self.absorb_child(i)
+			raise e
+
+		f = rpn_types.Function()
+		f.stack = i.stack
+		self.push(f)
+
 	def step(self):
 		if self.child is None:
 			if len(self.broken_commands):
@@ -418,12 +433,27 @@ class Interpreter(object):
 									#self.push(rpn_types.Value(v))
 									return
 								except:
+									varname = input_string[1:]
+									if self.stacksize() > 0:
+										item = self.pop()[0]
+										self.push(item)
+									else:
+										raise errors.NotEnoughOperands("Can't get subitem of an element that isn't there")
+									try:
+										v = item.get_var(varname)
+										self.parse(str(v))
+									except IndexError:
+										raise errors.OutOfBounds("Cannot access out of array bounds")
+									#self.message('parsing ' + str(v))
+									#self.push(rpn_types.Value(v))
+									return
+
 									raise
 
 							elif input_string[0] not in '0123456789.':
 								self.push(self.get_var(input_string))
 
-			except (errors.NotEnoughOperands, errors.CantAssign, errors.CantCloseBlock, errors.CantExecute, TypeError, AttributeError, decimal.DivisionByZero, errors.FunctionRequired, errors.OutOfBounds) as e:
+			except (errors.NotEnoughOperands, errors.CantAssign, errors.CantCloseBlock, errors.CantExecute, TypeError, AttributeError, decimal.DivisionByZero, errors.FunctionRequired, errors.OutOfBounds, errors.VarNotFound) as e:
 				self.last_fault = e
 				if not self.debug:
 					if root:

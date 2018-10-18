@@ -1,5 +1,9 @@
-65 ascii
-65 dup ascii ascii
-ascii
-swap
-ascii
+[ [ 1 ] a = 2 b = ]
+\a
+!!
+\a
+!
+`
+\b
+`
+`

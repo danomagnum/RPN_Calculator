@@ -139,6 +139,13 @@ def call(interp, a):
 	else:
 		raise errors.CantExecute('Cannot Execute a Non-Function')
 
+def call_as_list(interp, a):
+	if type(a) is rpn_types.Function:
+		interp.call_as_list(a)
+	else:
+		raise errors.CantExecute('Cannot Execute a Non-Function')
+
+
 def condition_if(interp, func, condition):
 	if condition.val == 1:
 		if type(func) is rpn_types.Function:

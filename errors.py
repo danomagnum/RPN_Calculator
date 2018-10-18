@@ -19,3 +19,6 @@ class WhileBreak(Exception):
 
 class OutOfBounds(Exception):
 	pass
+
+class VarNotFound(Exception):
+	pass

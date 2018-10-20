@@ -29,6 +29,10 @@ class Function(object):
 			self.stack = val.stack
 			interp.variables[self.name] = self 
 			return self 
+		elif type(val) == NULL:
+			var = Variable(self.name, NULL())
+			interp.variables[self.name] = var
+			return var
 	def __str__(self):
 		name = ''
 		in_str = False
@@ -100,6 +104,10 @@ class Variable(object):
 			f = Function(self.name, val.stack, self.comment)
 			interp.variables[self.name] = f
 			return f
+		elif type(val) == NULL:
+			var = Variable(self.name, NULL())
+			interp.variables[self.name] = var
+			return var
 
 	def __str__(self) :
 		string = ''

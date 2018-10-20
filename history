@@ -1,25 +1,7 @@
-[ 1 2 3 ]
-reverse
+:import fizzbuzz
+10
+fizzbuzz
 !
-[ 1 2 3 ]
-reverse !!
-[ 1 2 3 ] [ + ] foreach !
-[ 1 2 3 ]
-[ + ]
-foreach
-!
-`
-`
-`
-`
-`
-`
-`
-`
-[ 1 2 3 ]
-0 swap
-[ + ] foreach !
-1
-[ 1 2 4 ] [ * ] foreach !
-`
-`
+20
+fizzbuzz
+!!

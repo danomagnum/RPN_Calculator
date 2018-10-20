@@ -58,6 +58,11 @@ class Function(object):
 		else:
 			return len(self.stack)
 
+	def __eq__(self, other):
+		if type(other) != function:
+			return False
+		return other.stack == self.stack
+
 	def get_index(self, index):
 		if index < len(self.stack):
 			return self.stack[index]

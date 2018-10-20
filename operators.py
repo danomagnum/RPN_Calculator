@@ -107,6 +107,12 @@ def comment(interp, a, b):
 		raise errors.CantAssign('Cannot create comment')
 
 def equal(interp, a, b):
+	if type(b) is rpn_types.Function:
+		if type(a) is rpn_types.Function:
+			return [rpn_types.Value(int(b.stack == a.stack))
+		else:
+			return False
+
 	if type(b.val) is rpn_types.NULL:
 		if type(a.val) is rpn_types.NULL:
 			return [rpn_types.Value(1)]

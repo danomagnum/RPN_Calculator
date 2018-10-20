@@ -109,7 +109,7 @@ def comment(interp, a, b):
 def equal(interp, a, b):
 	if type(b) is rpn_types.Function:
 		if type(a) is rpn_types.Function:
-			return [rpn_types.Value(int(b.stack == a.stack))
+			return [rpn_types.Value(int(b.stack == a.stack))]
 		else:
 			return False
 
@@ -318,12 +318,14 @@ def concat(interp, item0, item1):
 
 	if type(item0) is not rpn_types.Function:
 		func = rpn_types.Function()
-		func.stack.insert(0, str(item0))
+		#func.stack.insert(0, str(item0))
+		func.stack.insert(0, item0)
 	else:
 		func = item0
 
 	if type(item1) is not rpn_types.Function:
-		func.stack.insert(0, str(item1))
+		func.stack.insert(0, item1)
+		#func.stack.insert(0, str(item1))
 	else:
 		func.stack = item1.stack + func.stack
 

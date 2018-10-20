@@ -107,27 +107,48 @@ def comment(interp, a, b):
 		raise errors.CantAssign('Cannot create comment')
 
 def equal(interp, a, b):
+	if type(b.val) is rpn_types.NULL:
+		if type(a.val) is rpn_types.NULL:
+			return [rpn_types.Value(1)]
+		else:
+			return [rpn_types.Value(0)]
 	if a.val == b.val:
 		return [rpn_types.Value(1)]
 	else:
 		return [rpn_types.Value(0)]
 
 def lequal(interp, a, b):
+	if type(b.val) is rpn_types.NULL:
+		return [rpn_types.Value(1)]
+	if type(a.val) is rpn_types.NULL:
+		return [rpn_types.Value(1)]
 	if a.val <= b.val:
 		return [rpn_types.Value(1)]
 	else:
 		return [rpn_types.Value(0)]
 def gequal(interp, a, b):
+	if type(b.val) is rpn_types.NULL:
+		return [rpn_types.Value(1)]
+	if type(a.val) is rpn_types.NULL:
+		return [rpn_types.Value(1)]
 	if a.val >= b.val:
 		return [rpn_types.Value(1)]
 	else:
 		return [rpn_types.Value(0)]
 def less(interp, a, b):
+	if type(b.val) is rpn_types.NULL:
+		return [rpn_types.Value(1)]
+	if type(a.val) is rpn_types.NULL:
+		return [rpn_types.Value(1)]
 	if a.val < b.val:
 		return [rpn_types.Value(1)]
 	else:
 		return [rpn_types.Value(0)]
 def greater(interp, a, b):
+	if type(b.val) is rpn_types.NULL:
+		return [rpn_types.Value(1)]
+	if type(a.val) is rpn_types.NULL:
+		return [rpn_types.Value(1)]
 	if a.val > b.val:
 		return [rpn_types.Value(1)]
 	else:

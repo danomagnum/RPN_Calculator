@@ -456,7 +456,7 @@ class Interpreter(object):
 							elif input_string[0] not in '0123456789.':
 								self.push(self.get_var(input_string))
 
-			except (errors.NotEnoughOperands, errors.CantAssign, errors.CantCloseBlock, errors.CantExecute, TypeError, AttributeError, decimal.DivisionByZero, errors.FunctionRequired, errors.OutOfBounds, errors.VarNotFound) as e:
+			except (errors.NotEnoughOperands, errors.CantAssign, errors.CantCloseBlock, errors.CantExecute, TypeError, AttributeError, decimal.DivisionByZero, errors.FunctionRequired, errors.OutOfBounds, errors.VarNotFound, ValueError) as e:
 				self.last_fault = e
 				if not self.debug:
 					if root:

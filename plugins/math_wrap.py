@@ -6,6 +6,7 @@
 
 import rpncalc
 import rpn_types
+import operators
 import math
 from decimal import Decimal
 
@@ -15,7 +16,9 @@ def noparam_gen(constant):
 noparam = ['e', 'pi']
 
 def oneparam_gen(function):
-	return lambda interp, a : [rpn_types.Value(Decimal(math.__dict__[function](a.val)))]
+	call_func = lambda interp, a : [rpn_types.Value(Decimal(math.__dict__[function](a.val)))]
+	#return lambda interp, a : [rpn_types.Value(Decimal(math.__dict__[function](a.val)))]
+	return operators.substack_distribute(call_func)
 
 oneparam = ['acos',
             'acosh',

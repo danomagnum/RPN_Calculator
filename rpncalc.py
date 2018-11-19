@@ -8,7 +8,7 @@ import errors
 import sys
 sys.setrecursionlimit(10000)
 
-DEBUG = False
+DEBUG = True
 
 
 log = []
@@ -364,6 +364,7 @@ class Interpreter(object):
 						return
 
 					if self.function_depth > 0:
+						#TODO: Start loading up substacks with valid entries (Values, Operators, etc...) instead of strings.
 						self.function_stack[self.function_depth - 1].append(input_string)
 						return
 					elif input_string[0] == "'":

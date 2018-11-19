@@ -3,16 +3,45 @@ import rpn_types
 import errors
 import copy
 
+def substack_distribute(func):
+	def wrapped(interp, a):
+		if type(a) is rpn_types.Function:
+			newfunc = rpn_types.Function()
+			for item in a.stack:
+				newfunc.stack.append(func(interp, item)[0])
+			return [newfunc]
+		
+		else:
+			return func(interp, a)
+	return wrapped
+
+def substack_distribute_2(func):
+	def wrapped(interp, b, a):
+		if type(a) is rpn_types.Function:
+			newfunc = rpn_types.Function()
+			for item in a.stack:
+				newfunc.stack.append(func(interp, b, item)[0])
+			return [newfunc]
+		
+		else:
+			return func(interp, b, a)
+	return wrapped
+
+@substack_distribute_2
 def add(interp, b, a):
 	comment = ''
 	if a.comment and b.comment:
 		comment = a.comment + '+' + b.comment
 	return [rpn_types.Value(a.val + b.val, comment)]
+
+@substack_distribute_2
 def sub(interp, b, a):
 	comment = ''
 	if a.comment and b.comment:
 		comment = a.comment + '-' + b.comment
 	return [rpn_types.Value(a.val - b.val, comment)]
+
+@substack_distribute_2
 def mult(interp, b, a):
 	comment = ''
 	result = 0
@@ -21,24 +50,33 @@ def mult(interp, b, a):
 	result = a.val * b.val
 
 	return [rpn_types.Value(result)]
+
+@substack_distribute_2
 def div(interp, b, a):
 	comment = ''
 	if a.comment and b.comment:
 		comment = a.comment + '/' + b.comment
 	return [rpn_types.Value(a.val / b.val, comment)]
+
 def convert_int(interp, a):
 	return [rpn_types.Value(int(a.val))]
+
 def convert_dec(interp, a):
 	return [rpn_types.Value(decimal.Decimal(a.val))]
+
 def convert_float(interp, a):
 	return [rpn_types.Value(decima.Decimal(a.val))]
+
+@substack_distribute_2
 def modulus(interp, b,a):
 	comment = ''
 	if a.comment and b.comment:
 		comment = a.comment + '%' + b.comment
 	return [rpn_types.Value(a.val % b.val, comment)]
+
 def swap(interp, a,b):
 	return (a, b)
+
 def assign(interp, var, val):
 	result = var.reassign(interp,val)
 	if result is not None:
@@ -72,8 +110,6 @@ def pop(interp, func):
 	item = func.pop()
 	return [func, item]
 
-
-
 def prepend(interp, func, item):
 	if not type(func) is rpn_types.Function:
 		raise errors.FunctionRequired()
@@ -91,6 +127,7 @@ def comment(interp, a, b):
 	else:
 		raise errors.CantAssign('Cannot create comment')
 
+@substack_distribute_2
 def equal(interp, a, b):
 	if type(b) is rpn_types.Function:
 		if type(a) is rpn_types.Function:
@@ -108,6 +145,7 @@ def equal(interp, a, b):
 	else:
 		return [rpn_types.Value(0)]
 
+@substack_distribute_2
 def lequal(interp, a, b):
 	if type(b.val) is rpn_types.NULL:
 		return [rpn_types.Value(1)]
@@ -117,6 +155,8 @@ def lequal(interp, a, b):
 		return [rpn_types.Value(1)]
 	else:
 		return [rpn_types.Value(0)]
+		
+@substack_distribute_2
 def gequal(interp, a, b):
 	if type(b.val) is rpn_types.NULL:
 		return [rpn_types.Value(1)]
@@ -126,6 +166,8 @@ def gequal(interp, a, b):
 		return [rpn_types.Value(1)]
 	else:
 		return [rpn_types.Value(0)]
+
+@substack_distribute_2
 def less(interp, a, b):
 	if type(b.val) is rpn_types.NULL:
 		return [rpn_types.Value(1)]
@@ -135,6 +177,8 @@ def less(interp, a, b):
 		return [rpn_types.Value(1)]
 	else:
 		return [rpn_types.Value(0)]
+
+@substack_distribute_2
 def greater(interp, a, b):
 	if type(b.val) is rpn_types.NULL:
 		return [rpn_types.Value(1)]
@@ -230,6 +274,7 @@ def roll(interp, number):
 	items.reverse()
 	return items[1:] + [items[0]]
 
+@substack_distribute_2
 def exponent(interp, b, a):
 	comment = ''
 	if a.comment and b.comment:
@@ -243,7 +288,7 @@ def size(interp):
 def subsize(interp, a):
 	return [a, rpn_types.Value(len(a))]
 
-
+@substack_distribute
 def negate(interp, a):
 	if a.val == 1:
 		return [ rpn_types.Value(0) ]
@@ -299,6 +344,7 @@ def is_null(interp, a):
 	else:
 		return [rpn_types.Value(0)]
 
+@substack_distribute_2
 def concat(interp, item0, item1):
 
 	if type(item0) is not rpn_types.Function:

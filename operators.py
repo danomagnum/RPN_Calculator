@@ -367,3 +367,14 @@ def halt_catch_fire(interp):
 	if interp.last_fault is not None:
 		interp.message("Catching Fire on " + str(interp.last_fault))
 		raise interp.last_fault
+
+def reference(interp, index, substack):
+	val = int(index.val)
+	
+	#if not type(substack) is rpn_types.Function:
+		#raise errors.FunctionRequired()
+	try:
+		v = substack.get_index(val)
+		interp.parse(str(v))
+	except IndexError:
+		raise errors.OutOfBounds("Cannot access out of array bounds")

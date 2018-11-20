@@ -220,24 +220,9 @@ class SubroutineTest(unittest.TestCase):
 		self.assertEqual(self.interp.stack, result2)
 
 	def test_references1(self):
-		# make sure we can reference all the elements in an array directly
-		if TEST_REFS:
-			tests = [(r'[1 2 3] 0 \ ', 1),
-			(r'[1 2 3] 1 \ ', 2),
-			(r'[1 2 3] 2 \ ', 3),
-			(r'[1 [2] 3] 1 \ ', '[ 2 ]'),
-			(r'[1 [2] 3] 1 \ 0 \ ', '2'),
-			(r'[1 [2] 3] 1 \ !', '2'),
-			(r'1 0 \ ', 1)]
-
-			for t in tests:
-				self.interp.parse(t[0])
-				self.assertEqual(str(self.interp.stack[-1]), str(t[1]))
-
-	def test_references2(self):
 		# make sure we can reference all the elements in an array via parameter 
 		if TEST_REFS:
-			tests = [(r'[1 2 3] 0 \ swap `', 1),
+			tests = [(r'[1 2 3] 0 \ ', 1),
 			(r'[1 2 3] 1 \ ', 2),
 			(r'[1 2 3] 2 \ ', 3),
 			(r'[1 [2] 3] 1 \ ', '[ 2 ]'),
@@ -249,15 +234,15 @@ class SubroutineTest(unittest.TestCase):
 				self.interp.parse(t[0])
 				self.assertEqual(str(self.interp.stack[-1]), str(t[1]))
 
-	def test_references3(self):
+	def test_references2(self):
 		# make sure we can't reference outside an array
 		if TEST_REFS:
-			tests = [(r'[ 1 2 3 ] 3 \ swap `'),
+			tests = [(r'[ 1 2 3 ] 3 \ '),
 				 (r'1 1 \ ')]
 			for t in tests:
 				self.assertRaises(errors.OutOfBounds,self.interp.parse,t)
 
-	def test_references4(self):
+	def test_references3(self):
 		if TEST_REFS:
 			# make sure we reference up the sack out of a function
 			tests = [(r'[ 1 2 3 ] [ 2 \ ] !', '3')]
@@ -350,13 +335,6 @@ class Bulk(unittest.TestCase):
 		self.interp.parse(test)
 		self.assertEqual(str(self.interp.stack[0]), str(rpn_types.Value(result)))
 		#self.assertEqual(self.interp.stack, [rpn_types.Value(result)])
-
-
-	def test_one(self):
-		if TEST_REFS:
-			self.interp.parse(r'[1 2 3] 0 \ swap `')
-			result = 1
-			self.assertEqual(str(self.interp.stack[0]), str(rpn_types.Value(result)))
 
 
 bulk_tests = [('5 1 2 + 4 * + 3 -', 14),

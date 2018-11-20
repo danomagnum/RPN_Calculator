@@ -8,7 +8,7 @@ import errors
 import sys
 sys.setrecursionlimit(10000)
 
-DEBUG = True
+DEBUG = False
 
 
 log = []
@@ -60,7 +60,8 @@ ops = {'+': operators.add, # tested
        'NULL': operators.add_null,
        'isnull': operators.is_null,
        'cat': operators.concat,
-       'hcf': operators.halt_catch_fire}
+       'hcf': operators.halt_catch_fire,
+       '\\': operators.reference}
 
  #functions which cannot appear in a variable name. (ex: testsize will be a variable, but test+ will beak into test and +).
 inline_break = {'+': operators.add,
@@ -349,26 +350,6 @@ class Interpreter(object):
 						continue
 
 					if type(token) is rpn_types.Variable_Placeholder:	
-
-						if token.val == '\\':
-							val = None
-							try:
-								val = int(self.pop()[0].val)
-								if self.stacksize() > 0:
-									item = self.pop()[0]
-									self.push(item)
-								else:
-									raise errors.NotEnoughOperands("Can't get subitem of an element that isn't there")
-								#self.push(item)
-								#self.message(str(item))
-								try:
-									v = item.get_index(val)
-									self.parse(str(v))
-								except IndexError:
-									raise errors.OutOfBounds("Cannot access out of array bounds")
-								continue
-							except:
-								raise
 						self.push(self.get_var(token.val))
 
 			except (errors.NotEnoughOperands, errors.CantAssign, errors.CantCloseBlock, errors.CantExecute, TypeError, AttributeError, decimal.DivisionByZero, errors.FunctionRequired, errors.OutOfBounds, errors.VarNotFound, ValueError) as e:

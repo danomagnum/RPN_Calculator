@@ -7,7 +7,6 @@
  [
   list
   i \
-  swap drop
   func !
   
   i 1 + i = # see if we've made it all the way through the list
@@ -25,7 +24,6 @@ drop
  [
   list
   s \
-  swap drop
   s 1 - s = # see if we've made it all the way through the list
   0 <=
   ]

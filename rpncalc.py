@@ -37,19 +37,19 @@ ops = {'+': operators.add, # tested
        'pop': operators.pop,
        '?': operators.show_vars,
        '"': operators.comment,
-       '==': operators.equal, # tested
-       '>': operators.greater, # tested
-       '<': operators.less, # tested
-       '>=': operators.gequal, # tested
-       '<=': operators.lequal, # tested
-       'not': operators.negate, # tested
+       '==': operators.equal,
+       '>': operators.greater,
+       '<': operators.less,
+       '>=': operators.gequal,
+       '<=': operators.lequal,
+       'not': operators.negate,
        '!': operators.call,
        '!!': operators.call_as_list,
        'if': operators.condition_if,
        'ifelse': operators.condition_ifelse,
        'while': operators.condition_while,
        'break': operators.condition_while_break,
-       '^': operators.exponent, # tested
+       '^': operators.exponent,
        '\\size': operators.subsize,
        'size': operators.size,
        'bin': operators.binary,
@@ -63,24 +63,6 @@ ops = {'+': operators.add, # tested
        'hcf': operators.halt_catch_fire,
        '\\': operators.reference}
 
- #functions which cannot appear in a variable name. (ex: testsize will be a variable, but test+ will beak into test and +).
-inline_break = {'+': operators.add,
-                '-': operators.sub,
-                '*': operators.mult,
-                '/': operators.div,
-                '%': operators.modulus,
-                '=': operators.assign,
-                '`': operators.remove,
-                '?': operators.show_vars,
-                '\'': operators.comment,
-                '==': operators.equal,
-                '>': operators.greater,
-                '<': operators.less,
-                '>=': operators.gequal,
-                '<=': operators.lequal,
-                '!': operators.call,
-                '^': operators.exponent}
-
 FUNCSTART = '['
 FUNCEND = ']'
 BREAK = '@'
@@ -89,16 +71,11 @@ FLOW_TOKENS = [FUNCSTART, FUNCEND, BREAK]
 
 
 class Interpreter(object):
-	def __init__(self, builtin_functions=None, inline_break_list=None, stack=None, parent=None):
+	def __init__(self, builtin_functions=None,  stack=None, parent=None):
 		if builtin_functions is None:
 			builtin_functions = {}
 
 		self.builtin_functions = builtin_functions
-
-		if inline_break_list is None:
-			inline_break_list = {}
-
-		self.inline_break_list = inline_break_list
 
 		if stack is None:
 			stack = []
@@ -232,7 +209,7 @@ class Interpreter(object):
 		self.messages += child.messages
 
 	def call(self, function):
-		i = Interpreter(self.builtin_functions,self.inline_break_list,parent=self)
+		i = Interpreter(self.builtin_functions,parent=self)
 		i.loop_count = self.loop_count
 		try:
 			for x in function.stack:
@@ -244,7 +221,7 @@ class Interpreter(object):
 		self.absorb_child(i)
 
 	def call_as_list(self, function):
-		i = Interpreter(self.builtin_functions,self.inline_break_list,parent=self)
+		i = Interpreter(self.builtin_functions,parent=self)
 		i.loop_count = self.loop_count
 		try:
 			for x in function.stack:

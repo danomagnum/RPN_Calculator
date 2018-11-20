@@ -10,7 +10,7 @@ TEST_STRINGS = False
 
 class BasicMath(unittest.TestCase):
 	def setUp(self):
-		self.interp = rpncalc.Interpreter(rpncalc.ops, rpncalc.inline_break)
+		self.interp = rpncalc.Interpreter(rpncalc.ops)
 		self.x0 = 2
 		self.x1 = 3
 		self.interp.parse('%i %i' %(self.x0, self.x1))
@@ -50,7 +50,7 @@ class BasicMath(unittest.TestCase):
 
 class BasicComparisons(unittest.TestCase):
 	def setUp(self):
-		self.interp = rpncalc.Interpreter(rpncalc.ops, rpncalc.inline_break)
+		self.interp = rpncalc.Interpreter(rpncalc.ops)
 		self.xbase = 53
 		self.interp.parse(str(self.xbase))
 
@@ -130,7 +130,7 @@ class BasicComparisons(unittest.TestCase):
 
 class SubroutineTest(unittest.TestCase):
 	def setUp(self):
-		self.interp = rpncalc.Interpreter(rpncalc.ops, rpncalc.inline_break)
+		self.interp = rpncalc.Interpreter(rpncalc.ops)
 	
 	def test_simple(self):
 		function = '[ 2 ] '
@@ -255,7 +255,7 @@ class SubroutineTest(unittest.TestCase):
 class StringsTest(unittest.TestCase):
 	if TEST_STRINGS:
 		def setUp(self):
-			self.interp = rpncalc.Interpreter(rpncalc.ops, rpncalc.inline_break)
+			self.interp = rpncalc.Interpreter(rpncalc.ops)
 		
 		def test_1(self):
 			function = "'hello world'"
@@ -279,7 +279,7 @@ class OperandCounts(unittest.TestCase):
 		paramlist = {'none':example_operation_noparams,
 		             'one': example_operation_oneparam,
 		             'two': example_operation_twoparam}
-		self.interp = rpncalc.Interpreter(paramlist, rpncalc.inline_break)
+		self.interp = rpncalc.Interpreter(paramlist)
 
 	def test_not_enough_operands0(self):
 		try:
@@ -299,7 +299,7 @@ class OperandCounts(unittest.TestCase):
 
 class While(unittest.TestCase):
 	def setUp(self):
-		self.interp = rpncalc.Interpreter(rpncalc.ops, rpncalc.inline_break)
+		self.interp = rpncalc.Interpreter(rpncalc.ops)
 
 	def test_break_outside_loop(self):
 		self.interp.parse('break')
@@ -320,7 +320,7 @@ class While(unittest.TestCase):
 	
 class Bulk(unittest.TestCase):
 	def setUp(self):
-		self.interp = rpncalc.Interpreter(rpncalc.ops, rpncalc.inline_break)
+		self.interp = rpncalc.Interpreter(rpncalc.ops)
 
 
 	def test_start(self):

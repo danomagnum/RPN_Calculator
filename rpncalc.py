@@ -55,7 +55,7 @@ ops = {'+': operators.add, # tested
        'bin': operators.binary,
        'hex': operators.hexadecimal,
        'oct': operators.octal,
-       'dec': operators.decimal,
+       'dec': operators.convert_dec,
        'ascii': operators.ascii_mode,
        'NULL': operators.add_null,
        'isnull': operators.is_null,
@@ -426,14 +426,30 @@ def tokenize(ops, input_string):
 
 	output_tokens = []
 
+
+	# then convert each token into the correct type.
 	for token in input_tokens:
 		if token in FLOW_TOKENS:
 			output_tokens.append(rpn_types.Flow_Control(token))
 			continue
 		# check if the input is just a value.
 		try:
-			val = decimal.Decimal(token)
-			output_tokens.append(rpn_types.Value(val))
+			if len(token) > 3:
+				if token[:2] == '0x':
+					val = rpn_types.Value(decimal.Decimal(int(token,0)))
+					val.mode = rpn_types.DISPLAY_HEX
+				elif token[:2] == '0b':
+					val = rpn_types.Value(decimal.Decimal(int(token,0)))
+					val.mode = rpn_types.DISPLAY_BIN
+				elif token[:2] == '0o':
+					val = rpn_types.Value(decimal.Decimal(int(token,0)))
+					val.mode = rpn_types.DISPLAY_OCT
+				else:
+					val = rpn_types.Value(decimal.Decimal(token))
+
+			else:
+				val = rpn_types.Value(decimal.Decimal(token))
+			output_tokens.append(val)
 			continue
 		except:
 			#the input is not just a value so lets see if it is a function
@@ -441,6 +457,7 @@ def tokenize(ops, input_string):
 				output_tokens.append(rpn_types.Operator(token))
 				continue
 			else:
+			#So it's a variable name
 				output_tokens.append(rpn_types.Variable_Placeholder(token))
 				continue
 	

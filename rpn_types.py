@@ -170,7 +170,7 @@ class Value(object):
 		elif self.mode == DISPLAY_OCT:
 			string = "0o%o" % self.val
 		elif self.mode == DISPLAY_BIN:
-			string = str(bin(self.val))
+			string = str(bin(int(self.val)))
 		elif self.mode == DISPLAY_ASCII:
 			string = str(repr(chr(self.val)))
 

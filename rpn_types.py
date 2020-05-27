@@ -5,6 +5,7 @@ DISPLAY_DEC = 10
 DISPLAY_OCT = 8
 DISPLAY_HEX = 16
 DISPLAY_ASCII = 128
+DISPLAY_COMMA = 256
 
 
 class Function(object):
@@ -118,6 +119,8 @@ class Variable(object):
 		string = ''
 		if self.mode == DISPLAY_DEC:
 			string += str(self.val)
+		elif self.mode == DISPLAY_COMMA:
+			string += "{:,.2f}".format(self.val)
 		elif self.mode == DISPLAY_HEX:
 			string += "Ox%X" % int(self.val)
 		elif self.mode == DISPLAY_OCT:
@@ -165,6 +168,8 @@ class Value(object):
 
 		if self.mode == DISPLAY_DEC:
 			string = str(self.val)
+		elif self.mode == DISPLAY_COMMA:
+			string = "{:,.2f}".format(self.val)
 		elif self.mode == DISPLAY_HEX:
 			string = "Ox%X" % self.val
 		elif self.mode == DISPLAY_OCT:

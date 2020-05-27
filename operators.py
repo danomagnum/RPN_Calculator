@@ -65,7 +65,7 @@ def convert_dec(interp, a):
 	return [rpn_types.Value(decimal.Decimal(a.val))]
 
 def convert_float(interp, a):
-	return [rpn_types.Value(decima.Decimal(a.val))]
+	return [rpn_types.Value(decimal.Decimal(a.val))]
 
 @substack_distribute_2
 def modulus(interp, b,a):
@@ -301,8 +301,19 @@ def binary(interp):
 		interp.stack[-1].mode = rpn_types.DISPLAY_BIN
 		str(interp.stack[-1])
 	except:
-		interp.stack[-1].mode = original
+		#interp.stack[-1].mode = original
 		interp.message("Could not change display mode to binary for " + str(interp.stack[-1]))
+
+def comma(interp):
+	original = interp.stack[-1].mode
+	try:
+		interp.stack[-1].mode = rpn_types.DISPLAY_COMMA
+		str(interp.stack[-1])
+	except:
+		#interp.stack[-1].mode = original
+		interp.message("Could not change display mode to comma for " + str(interp.stack[-1]))
+		
+
 		
 def ascii_mode(interp):
 	original = interp.stack[-1].mode

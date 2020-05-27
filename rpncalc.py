@@ -56,6 +56,7 @@ ops = {'+': operators.add, # tested
        'hex': operators.hexadecimal,
        'oct': operators.octal,
        'dec': operators.convert_dec,
+       'comma': operators.comma,
        'ascii': operators.ascii_mode,
        'NULL': operators.add_null,
        'isnull': operators.is_null,
@@ -327,7 +328,15 @@ class Interpreter(object):
 						continue
 
 					if type(token) is rpn_types.Variable_Placeholder:	
-						self.push(self.get_var(token.val))
+						if token.val[0] == "\\":
+							#self.push(self.get_var(token.val))
+							operand = self.stack[-1]
+							if not type(operand) is rpn_types.Function:
+								raise errors.FunctionRequired()
+							self.push(operand.get_var(token.val[1:]))
+
+						else:
+							self.push(self.get_var(token.val))
 
 			except (errors.NotEnoughOperands, errors.CantAssign, errors.CantCloseBlock, errors.CantExecute, TypeError, AttributeError, decimal.DivisionByZero, errors.FunctionRequired, errors.OutOfBounds, errors.VarNotFound, ValueError) as e:
 				self.last_fault = e

@@ -8,6 +8,20 @@ DISPLAY_ASCII = 128
 DISPLAY_COMMA = 256
 
 
+def space_every(binstring, spacing=4, char=' ', prefix_len = 2, pad=True, padchar='0'):
+	# add spaces every 4 bits in a binary string
+	newstring = binstring 
+	if len(binstring) > (spacing + prefix_len):
+		newstring = space_every(binstring[:-spacing]) + char + binstring[-spacing:]
+	elif len(binstring) < (spacing + prefix_len):
+		if pad:
+			l = len(binstring) - prefix_len
+			newstring = binstring[:prefix_len] + padchar * (spacing - l) + binstring[prefix_len:]
+
+	return newstring
+
+
+
 class Function(object):
 	def __init__(self, name=None, stack = None, comment = ''):
 		self.name = name
@@ -126,7 +140,8 @@ class Variable(object):
 		elif self.mode == DISPLAY_OCT:
 			string += "0o%o" % int(self.val)
 		elif self.mode == DISPLAY_BIN:
-			string += str(bin(int(self.val)))
+			string = space_every(str(bin(int(self.val))))
+			#string += str(bin(int(self.val)))
 		elif self.mode == DISPLAY_ASCII:
 			string += str(repr(chr(int(self.val))))
 		string += ' ' + str(self.name) + ' = '
@@ -175,7 +190,8 @@ class Value(object):
 		elif self.mode == DISPLAY_OCT:
 			string = "0o%o" % self.val
 		elif self.mode == DISPLAY_BIN:
-			string = str(bin(int(self.val)))
+			string = space_every(str(bin(int(self.val))))
+			#string = str(bin(int(self.val)))
 		elif self.mode == DISPLAY_ASCII:
 			string = str(repr(chr(self.val)))
 

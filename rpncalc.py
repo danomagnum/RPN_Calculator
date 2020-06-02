@@ -401,12 +401,22 @@ def splitup(string):
 	result = []
 	comment = '#'
 	ignore = [' ', '']
+
 	break_tokens = ['[', ']',
-	                '+', '-', '*', '/', '^', '%',
+	                '+', '*', '/', '^', '%',
                         '`',
                         '?',
 			' '
 			]
+
+#	break_tokens = ['[', ']',
+#	                '+', '-', '*', '/', '^', '%',
+#                        '`',
+#                        '?',
+#			' '
+#			]
+#
+#
 
 	working = string.split(comment)[0]
 	working = working.split(' ')

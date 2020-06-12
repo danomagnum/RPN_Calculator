@@ -1,0 +1,15 @@
+
+# calculate the sum of the squares of a list
+[ [ dup * ]
+  foreach
+  !!
+  [ + ]
+  apply !
+  ] sumsq =
+  drop
+
+# root mean square of a list
+[ sumsq !
+  math.sqrt
+  ] rms =
+  drop

@@ -71,3 +71,19 @@ drop
  ] in = drop
 
 
+
+[ func = drop
+  pop  # get first operand
+  swap # put list back at the end of the stack
+  [
+    pop # get next operand
+    rot # re-arrange so we go <list> <op1> <op2>
+    func !
+    swap # get the list
+    \size 0 <
+  ]
+  while
+  drop
+] apply = drop
+	    
+  

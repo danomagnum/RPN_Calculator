@@ -11,5 +11,5 @@
 # root mean square of a list
 [ sumsq !
   math.sqrt
-  ] rms =
+  ] rss =
   drop

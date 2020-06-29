@@ -255,6 +255,24 @@ class Application(tk.Frame):
 		else:
 			self.messagebox.insert(0, 'Invalid Filename ' + filename)
 
+	def copy_val(self):
+		root.clipboard_clear()
+		text = ''
+		for sel in self.stackbox.curselection():
+			text += self.stackbox.get(sel) + '\n'
+		root.clipboard_append(text)
+		root.update()
+
+	def copy_all(self):
+		try:
+			root.clipboard_clear()
+			text = ''
+			for t in self.stackbox.get(0, tk.END):
+				text += ''.join(t) + '\n'
+			root.update()
+		except:
+			interp.message('error')
+
 	def load(self):
 		global interp
 		filename = tkFileDialog.askopenfilename(filetypes=[('RPN files', '.rpn'), ('all files', '*')], title='Load Session')
@@ -279,6 +297,12 @@ class Application(tk.Frame):
 		self.filemenu.add_command(label="save", command=self.save)
 		self.filemenu.add_command(label="load", command=self.load)
 		self.menubar.add_cascade(label="File", menu=self.filemenu)
+
+		self.editmenu = tk.Menu(self.menubar, tearoff=0)
+		self.editmenu.add_command(label="copy val", command=self.copy_val)
+		self.editmenu.add_command(label="copy all", command=self.copy_all)
+		self.menubar.add_cascade(label="Edit", menu=self.editmenu)
+
 		self.operatormenu = tk.Menu(self.menubar, tearoff=0, postcommand=self.showoperators)
 		self.menubar.add_cascade(label="Operators", menu=self.operatormenu)
 		self.varmenu = tk.Menu(self.menubar, tearoff=0, postcommand=self.showvars)
@@ -301,7 +325,7 @@ class Application(tk.Frame):
 		#self.font = tkFont.Font(family='Courier',size=18)
 		self.font = tkFont.Font(family='Consolas',size=18)
 
-		self.stackbox = tk.Listbox(self.stackframe, yscrollcommand=self.stackscroll.set, width=30, font=self.font)
+		self.stackbox = tk.Listbox(self.stackframe, yscrollcommand=self.stackscroll.set, width=30, font=self.font, selectmode=tk.EXTENDED)
 		self.stackscroll.config(command=self.stackbox.yview)
 		self.stackscroll.pack(side=tk.RIGHT, fill=tk.Y)
 		self.stackbox.pack(fill=tk.BOTH, expand=1)

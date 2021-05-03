@@ -74,7 +74,7 @@ class Function(object):
 			return len(self.stack)
 
 	def __eq__(self, other):
-		if type(other) != function:
+		if type(other) != Function:
 			return False
 		return other.stack == self.stack
 
@@ -186,7 +186,8 @@ class Value(object):
 		elif self.mode == DISPLAY_COMMA:
 			string = "{:,.2f}".format(self.val)
 		elif self.mode == DISPLAY_HEX:
-			string = "Ox%X" % self.val
+			#string = "Ox%X" % self.val
+			string = '0x{:02x}'.format(int(self.val))
 		elif self.mode == DISPLAY_OCT:
 			string = "0o%o" % self.val
 		elif self.mode == DISPLAY_BIN:

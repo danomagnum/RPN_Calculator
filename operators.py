@@ -330,7 +330,7 @@ def hexadecimal(interp):
 	try:
 		interp.stack[-1].mode = rpn_types.DISPLAY_HEX
 		str(interp.stack[-1])
-	except:
+	except Exception as e:
 		interp.stack[-1].mode = original
 		interp.message("Could not change display mode to hex for " + str(interp.stack[-1]))
 

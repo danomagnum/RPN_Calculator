@@ -2,13 +2,21 @@ import rpncalc
 #import readline
 import copy
 import pickle
-import Tkinter as tk
-import tkFileDialog
-import tkFont
 import sys
+
+if (sys.version_info > (3, 0)):
+  import tkinter as tk
+  import tkinter.filedialog as tkFileDialog
+  import tkinter.font as tkFont
+else:
+  import Tkinter as tk
+  import tkFileDialog
+  import tkFont
+
 import os
 import math
 import pkgutil
+import importlib
 import settings
 
 STACK = 0
@@ -19,12 +27,23 @@ mode = STACK
 
 loaded_plugins = {}
 #load the plugins
-def load_all_modules_from_dir(dirname):
+def load_all_modules_from_dir_old(dirname):
 	for importer, package_name, _ in pkgutil.iter_modules([dirname]):
 		full_package_name = '%s.%s' % (dirname, package_name)
 		if full_package_name not in sys.modules:
 			module = importer.find_module(package_name).load_module(full_package_name)
 			yield module
+
+def load_all_modules_from_dir(dirname):
+	for name in os.listdir(dirname):
+		if name.endswith('.py') and not name.startswith('__'):
+			module_name = '{}.{}'.format(dirname,name[:-3])
+		if module_name not in sys.modules:
+			module = importlib.import_module(module_name)
+			yield module
+
+
+
 
 
 for module in load_all_modules_from_dir('plugins'):
@@ -49,10 +68,12 @@ history_position = 0
 historyfile = open('history', 'w+')
 history = historyfile.readlines()
 
+'''
 def editor_validator(keystroke):
 	#raise Exception('ERRORRRRR: ' + str(keystroke))
 	message = str(keystroke)
-	tbox.do_command(keystroke)
+	inputbox.do_command(keystroke)
+'''
 
 def import_file(filename):
 	f = open(filename)
@@ -178,12 +199,12 @@ class Application(tk.Frame):
 		except ShutErDownBoys:
 			loop = False
 		except KeyboardInterrupt:
-			input_string = input_string_pre + input_string_post
-			if input_string:
-				input_string_post = ''
-				input_string_pre = ''
-			else:
-				loop = False
+			#input_string = input_string_pre + input_string_post
+			#if input_string:
+				#input_string_post = ''
+				#input_string_pre = ''
+			#else:
+			loop = False
 		except BadPythonCommand as e:
 			interp.message(e.message)
 		except:
@@ -216,6 +237,12 @@ class Application(tk.Frame):
 
 	def command_inserter(self, op):
 		return lambda: self.inputbox.insert(tk.END, ' %s' % op)
+
+	def command_executer(self, op):
+		def executer():
+			self.inputbox.insert(tk.END, ' %s' % op)
+			self.EnterKey(None)
+		return executer
 
 	def showoperators(self):
 		self.operatormenu.delete(0,tk.END)
@@ -317,7 +344,12 @@ class Application(tk.Frame):
 
 		root.config(menu=self.menubar)
 
-		self.stackframe = tk.Frame(self, width=400, height=500)
+		self.left = tk.Frame(self, width=400, height=500)
+		self.left.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
+		self.right = tk.Frame(self, width=100, height=500)
+		self.right.pack(fill=tk.BOTH, expand=1)
+
+		self.stackframe = tk.Frame(self.left, width=400, height=500)
 		self.stackframe.pack(fill=tk.BOTH, expand=1)
 
 		self.stackscroll = tk.Scrollbar(self.stackframe, orient=tk.VERTICAL)
@@ -330,7 +362,7 @@ class Application(tk.Frame):
 		self.stackscroll.pack(side=tk.RIGHT, fill=tk.Y)
 		self.stackbox.pack(fill=tk.BOTH, expand=1)
 
-		self.inputbox = tk.Entry(self, font=self.font)
+		self.inputbox = tk.Entry(self.left, font=self.font)
 		self.inputbox.pack(fill=tk.X, expand=0)
 		self.inputbox.bind('<Return>', self.EnterKey)
 		self.inputbox.bind('<KP_Enter>', self.EnterKey)
@@ -339,7 +371,7 @@ class Application(tk.Frame):
 		self.inputbox.bind('<Control-c>', self.CtrlC)
 
 
-		self.messageframe = tk.Frame(self)
+		self.messageframe = tk.Frame(self.left)
 		self.messageframe.pack(fill=tk.X, expand=0)
 		self.messagescrolly = tk.Scrollbar(self.messageframe, orient=tk.VERTICAL)
 
@@ -349,6 +381,24 @@ class Application(tk.Frame):
 		self.messagescrolly.pack(side=tk.RIGHT, fill=tk.Y)
 
 		self.messagebox.pack(fill=tk.X, expand=0)
+
+
+		self.faveframe = tk.Frame(self.right)
+		self.faveframe.pack(fill=tk.X, expand=0)
+
+		#self.favebox = tk.Listbox(self.faveframe, yscrollcommand=self.favescrolly.set, height=3)
+		favebtn1 = tk.Button(self.faveframe, text="Hex", command=self.command_executer('hex'))
+		favebtn1.pack(fill=tk.X, expand=0)
+
+		favebtn2 = tk.Button(self.faveframe, text="Dec", command=self.command_executer('dec'))
+		favebtn2.pack(fill=tk.X, expand=0)
+
+		favebtn3 = tk.Button(self.faveframe, text="Bin", command=self.command_executer('bin'))
+		favebtn3.pack(fill=tk.X, expand=0)
+
+
+
+
 
 app = Application()
 app.master.title('Python RPN Calculator')

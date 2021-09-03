@@ -217,14 +217,14 @@ class Application(tk.Frame):
 		if history_position < len(history):
 			history_position += 1
 			self.inputbox.delete(0,tk.END)
-			self.inputbox.insert(0,str(history[-history_position][:-1]))
+			self.inputbox.insert(0,str(history[-history_position][:]))
 
 	def DownKey(self, event):
 		global history_position
 		if history_position > 1:
 			history_position -= 1
 			self.inputbox.delete(0,tk.END)
-			self.inputbox.insert(0,str(history[-history_position][:-1]))
+			self.inputbox.insert(0,str(history[-history_position][:]))
 		elif history_position == 1:
 			self.inputbox.delete(0,tk.END)
 

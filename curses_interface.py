@@ -6,6 +6,7 @@ import os
 import math
 import pkgutil
 import settings
+import importlib
 
 STACK = 0
 GRAPH_XY = 1
@@ -26,12 +27,22 @@ inputbox.keypad(1)
 
 loaded_plugins = {}
 #load the plugins
-def load_all_modules_from_dir(dirname):
+def load_all_modules_from_dir_old(dirname):
 	for importer, package_name, _ in pkgutil.iter_modules([dirname]):
 		full_package_name = '%s.%s' % (dirname, package_name)
 		if full_package_name not in sys.modules:
 			module = importer.find_module(package_name).load_module(full_package_name)
 			yield module
+
+
+def load_all_modules_from_dir(dirname):
+	for name in os.listdir(dirname):
+		if name.endswith('.py') and not name.startswith('__'):
+			module_name = '{}.{}'.format(dirname,name[:-3])
+		if module_name not in sys.modules:
+			module = importlib.import_module(module_name)
+			yield module
+
 
 
 for module in load_all_modules_from_dir('plugins'):

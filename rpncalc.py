@@ -286,8 +286,9 @@ class Interpreter(object):
 				self.messages = []
 
 			try:
-				# first split the input up into multiple components if there are any and parse them in order
+				input_string = input_string.replace(',','') # replace all commas to allow numbers to be written more clearly
 
+				# first split the input up into multiple components if there are any and parse them in order
 				tokens = tokenize(self.operatorlist, input_string)
 				for token in tokens:
 					if self.paused:

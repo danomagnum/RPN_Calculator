@@ -27,7 +27,7 @@ def load_all_modules_from_dir(dirname):
 function_list = rpncalc.ops.copy()
 function_list.update(loaded_plugins)
 
-	interp = rpncalc.Interpreter(function_list)
+interp = rpncalc.Interpreter(function_list)
 
 
 class ShutErDownBoys(Exception):

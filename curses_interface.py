@@ -204,7 +204,7 @@ while loop:
 		elif event == 8:
 			event = curses.KEY_BACKSPACE
 		elif event == 127:
-			event = curses.KEY_DC
+			event = curses.KEY_BACKSPACE
 
 		if event <= 255:
 			if event > 0:

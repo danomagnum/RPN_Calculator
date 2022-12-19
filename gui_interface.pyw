@@ -238,10 +238,11 @@ class Application(tk.Frame):
 	def command_inserter(self, op):
 		return lambda: self.inputbox.insert(tk.END, ' %s' % op)
 
-	def command_executer(self, op):
+	def command_executer(self, ops):
 		def executer():
-			self.inputbox.insert(tk.END, ' %s' % op)
-			self.EnterKey(None)
+			for op in ops:
+				self.inputbox.insert(tk.END, ' %s' % op)
+				self.EnterKey(None)
 		return executer
 
 	def showoperators(self):
@@ -386,17 +387,11 @@ class Application(tk.Frame):
 		self.faveframe = tk.Frame(self.right)
 		self.faveframe.pack(fill=tk.X, expand=0)
 
+		from favorites import favorites
+		for fave in favorites:
 		#self.favebox = tk.Listbox(self.faveframe, yscrollcommand=self.favescrolly.set, height=3)
-		favebtn1 = tk.Button(self.faveframe, text="Hex", command=self.command_executer('hex'))
-		favebtn1.pack(fill=tk.X, expand=0)
-
-		favebtn2 = tk.Button(self.faveframe, text="Dec", command=self.command_executer('dec'))
-		favebtn2.pack(fill=tk.X, expand=0)
-
-		favebtn3 = tk.Button(self.faveframe, text="Bin", command=self.command_executer('bin'))
-		favebtn3.pack(fill=tk.X, expand=0)
-
-
+			favebtn = tk.Button(self.faveframe, text=fave[0], command=self.command_executer(fave[1]))
+			favebtn.pack(fill=tk.X, expand=0)
 
 
 
